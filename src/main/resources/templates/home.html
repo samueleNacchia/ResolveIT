@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        .user-info { margin-top: 20px; border-collapse: collapse; width: 100%; }
+        .user-info td, .user-info th { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        .user-info th { background-color: #f8f9fa; color: #555; width: 30%; }
+        .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .badge-operatore { background-color: #e3f2fd; color: #0d47a1; }
+        .badge-cliente { background-color: #f3e5f5; color: #4a148c; }
+        .logout-btn { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; }
+        .logout-btn:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Benvenuto, <span th:text="${utente.nome}">Utente</span>!</h1>
+
+    <p>Ecco il riepilogo dei tuoi dati profilo:</p>
+
+    <table class="user-info">
+        <tr>
+            <th>Nome</th>
+            <td th:text="${utente.nome}">N/A</td>
+        </tr>
+        <tr>
+            <th>Cognome</th>
+            <td th:text="${utente.cognome}">N/A</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td th:text="${utente.username}">N/A</td> </tr>
+        <tr>
+            <th>Ruolo</th>
+            <td>
+                <span th:each="authority : ${utente.authorities}"
+                      th:text="${authority.authority}"
+                      th:classappend="${authority.authority == 'OPERATORE'} ? 'badge badge-operatore' : 'badge badge-cliente'">
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <hr>
+
+    <div th:if="${#lists.contains(utente.authorities.![authority], 'OPERATORE')}">
+        <p><strong>Area Operatore:</strong> Puoi visualizzare i Ticket dei clienti e quelli di tua responsabilità</p>
+    </div>
+
+    <div th:if="${#lists.contains(utente.authorities.![authority], 'CLIENTE')}">
+        <p><strong>Area Cliente:</strong> Puoi inviare nuovi Ticket e monitorarne lo stato di avanzamento.</p>
+    </div>
+
+    <form th:action="@{/logout}" method="post">
+        <button type="submit" class="logout-btn" style="border:none; cursor:pointer;">Disconnetti</button>
+    </form>
+</div>
+
+</body>
+</html>
