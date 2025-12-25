@@ -2,6 +2,7 @@ package it.unisa.resolveIt.registrazione.service;
 
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
+import it.unisa.resolveIt.model.repository.GestoreRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
 import it.unisa.resolveIt.registrazione.dto.RegistraUtenteDTO;
 import org.junit.jupiter.api.Test;
@@ -20,10 +21,13 @@ import static org.mockito.Mockito.*;
 class RegistrazioneServiceTest {
 
     @Mock
-    private ClienteRepository clienteRepository; // Simuliamo il DB
+    private ClienteRepository clienteRepository;
 
     @Mock
-    private OperatoreRepository operatoreRepository; // Simuliamo il DB
+    private OperatoreRepository operatoreRepository;
+
+    @Mock
+    private GestoreRepository gestoreRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -41,6 +45,7 @@ class RegistrazioneServiceTest {
         // WHEN: Esaminiamo il comportamento (Mockito dice che l'email non esiste)
         when(clienteRepository.existsByEmail(anyString())).thenReturn(false);
         when(operatoreRepository.existsByEmail(anyString())).thenReturn(false);
+        when(gestoreRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("passwordCriptata");
 
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvato);

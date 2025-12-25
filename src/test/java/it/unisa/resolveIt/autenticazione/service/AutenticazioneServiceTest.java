@@ -2,6 +2,7 @@ package it.unisa.resolveIt.autenticazione.service;
 
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
+import it.unisa.resolveIt.model.repository.GestoreRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +21,11 @@ class AutenticazioneServiceTest {
 
     @Mock
     private ClienteRepository clienteRepository;
+
     @Mock private OperatoreRepository operatoreRepository;
+
+    @Mock private GestoreRepository gestoreRepository;
+
     @InjectMocks
     private AutenticazioneService autenticazioneService;
 
@@ -32,6 +37,7 @@ class AutenticazioneServiceTest {
 
         when(operatoreRepository.findByEmail(email)).thenReturn(null);
         when(clienteRepository.findByEmail(email)).thenReturn(c);
+        when(gestoreRepository.findByEmail(anyString())).thenReturn(null);
 
         UserDetails user = autenticazioneService.loadUserByUsername(email);
 
@@ -40,9 +46,10 @@ class AutenticazioneServiceTest {
     }
 
     @Test
-    void loadUserByUsername_UtenteInesistente_LanciaException() {
+    void loadUserByUsername_UtenteInesistente() {
         when(operatoreRepository.findByEmail(anyString())).thenReturn(null);
         when(clienteRepository.findByEmail(anyString())).thenReturn(null);
+        when(gestoreRepository.findByEmail(anyString())).thenReturn(null);
 
         assertThrows(UsernameNotFoundException.class, () -> {
             autenticazioneService.loadUserByUsername("non-esiste@test.com");
