@@ -1,0 +1,209 @@
+:root {
+    --primary-color: #437095;
+    --primary-hover: #355a78;
+    --text-color: #333;
+    --light-grey: #666;
+    --border-color: #ddd;
+    --error-bg: #f8d7da;
+    --error-text: #721c24;
+    --success-bg: #d4edda;
+    --success-text: #155724;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    color: var(--text-color);
+    background-color: #ffffff;
+}
+
+/* Layout Principale */
+.auth-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5%;
+    padding: 2rem 10%;
+}
+
+/* Sezione Landing (Sinistra) */
+.hero-section {
+    flex: 1;
+    max-width: 500px;
+    text-align: center;
+}
+
+.hero-section h1 {
+    font-size: 2.8rem;
+    line-height: 1.2;
+    margin-bottom: 2rem;
+    font-weight: 800;
+}
+
+.hero-image {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    filter: none;
+    mix-blend-mode: multiply;
+}
+
+/* Sezione Form (Destra) */
+.form-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.auth-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 450px;
+    border: 1px solid #eee;
+}
+
+.auth-card h2 {
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+/* Gruppi di Input */
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+input.is-invalid {
+    border-color: #dc3545;
+}
+
+/* Password Wrapper */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Stile base dell'icona */
+.eye-icon {
+    position: absolute;
+    right: 15px;
+    cursor: pointer;
+    color: var(--light-grey);
+    font-size: 18px;
+    /* Impedisce la selezione del testo quando si clicca l'icona */
+    user-select: none;
+    transition: color 0.2s ease-in-out;
+}
+
+/* MODIFICA 2: Hover sull'icona */
+.eye-icon:hover {
+    color: var(--primary-color);
+}
+
+/* Bottoni */
+.btn-auth {
+    width: 100%;
+    padding: 0.9rem;
+    border: none;
+    border-radius: 50px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.3s;
+}
+
+.btn-auth:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Alert e Feedback */
+.alert {
+    padding: 0.8rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.alert-error { background: var(--error-bg); color: var(--error-text); border: 1px solid #f5c6cb; }
+.alert-success { background: var(--success-bg); color: var(--success-text); border: 1px solid #c3e6cb; }
+
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+/* Link Footer */
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.auth-footer a {
+    color: var(--primary-color);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.forgot-password {
+    display: block;
+    margin-top: 1rem;
+    color: var(--light-grey);
+    font-size: 0.8rem;
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .auth-main {
+        flex-direction: column;
+        padding: 2rem 5%;
+        gap: 3rem;
+    }
+    .hero-section h1 { font-size: 2rem; }
+}

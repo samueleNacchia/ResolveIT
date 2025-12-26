@@ -27,7 +27,7 @@ class AutenticazioneServiceTest {
     @Mock private GestoreRepository gestoreRepository;
 
     @InjectMocks
-    private AutenticazioneService autenticazioneService;
+    private AutenticazioneImpl autenticazioneService;
 
     @Test
     void loadUserByUsername_TrovaCliente_Successo() {

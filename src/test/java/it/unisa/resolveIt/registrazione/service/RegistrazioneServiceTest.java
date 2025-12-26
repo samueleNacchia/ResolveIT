@@ -33,7 +33,7 @@ class RegistrazioneServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private RegistrazioneService registrazioneService; // La classe da testare
+    private RegistrazioneImpl registrazioneService; // La classe da testare
 
     @Test
     void testRegistrazioneCliente_Successo() {
