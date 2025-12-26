@@ -24,6 +24,10 @@ public class Ticket {
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "operatore_id")
+    private Operatore operatore;
+
 
     @Column(updatable = false, nullable = false)
     private LocalDateTime dataCreazione;
@@ -124,5 +128,21 @@ public class Ticket {
 
     public void setTesto(String testo) {
         this.testo = testo;
+    }
+
+    public CategoriaStub getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(CategoriaStub categoria) {
+        this.categoria = categoria;
+    }
+
+    public Operatore getOperatore() {
+        return operatore;
+    }
+
+    public void setOperatore(Operatore operatore) {
+        this.operatore = operatore;
     }
 }
