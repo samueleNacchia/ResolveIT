@@ -1,5 +1,6 @@
 package it.unisa.resolveIt.model.entity;
 
+import it.unisa.resolveIt.model.enums.Stato;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -44,6 +45,8 @@ public class Ticket {
     @Column(length = 2000)
     private String testo;
 
+    @Enumerated(EnumType.STRING)
+    private Stato stato;
 
     public Ticket() {}
 
@@ -144,5 +147,13 @@ public class Ticket {
 
     public void setOperatore(Operatore operatore) {
         this.operatore = operatore;
+    }
+
+    public Stato getStato() {
+        return stato;
+    }
+
+    public void setStato(Stato stato) {
+        this.stato = stato;
     }
 }
