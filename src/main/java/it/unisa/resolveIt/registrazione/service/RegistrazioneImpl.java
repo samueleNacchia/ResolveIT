@@ -7,6 +7,7 @@ import it.unisa.resolveIt.model.repository.GestoreRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
 import it.unisa.resolveIt.registrazione.dto.RegistraUtenteDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,33 +28,35 @@ public class RegistrazioneImpl implements RegistrazioneService{
     private PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails registerUser(RegistraUtenteDTO userDto){
+    public UserDetails registerClient(RegistraUtenteDTO dto) {
+        validateRegistration(dto);
+        String passwordHash = passwordEncoder.encode(dto.getPassword());
 
-        String email = userDto.getEmail();
+        Cliente nuovoCliente = new Cliente(dto.getNome(), dto.getCognome(), dto.getEmail(), passwordHash);
+        return clienteRepository.save(nuovoCliente);
+    }
 
-        if (clienteRepository.existsByEmail(email) || operatoreRepository.existsByEmail(email) || gestoreRepository.existsByEmail(email)) {
+
+    @Override
+    @PreAuthorize("hasAuthority('GESTORE')")
+    public UserDetails registerOperator(RegistraUtenteDTO dto) {
+        validateRegistration(dto);
+        String passwordHash = passwordEncoder.encode(dto.getPassword());
+
+        Operatore nuovoOperatore = new Operatore(dto.getNome(), dto.getCognome(), dto.getEmail(), passwordHash);
+        return operatoreRepository.save(nuovoOperatore);
+    }
+
+
+    private void validateRegistration(RegistraUtenteDTO dto) {
+        if (clienteRepository.existsByEmail(dto.getEmail()) ||
+                operatoreRepository.existsByEmail(dto.getEmail()) ||
+                gestoreRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email già in uso!");
         }
-
-        if (!userDto.getPassword().equals(userDto.getConfermaPassword())) {
+        if (!dto.getPassword().equals(dto.getConfermaPassword())) {
             throw new RuntimeException("Le password non coincidono!");
         }
-
-        String nome = userDto.getNome();
-        String cognome = userDto.getCognome();
-        String passwordHash = passwordEncoder.encode(userDto.getPassword());
-
-        UserDetails savedUser;
-
-        if(userDto.isClient()){
-            Cliente newClient = new Cliente(nome, cognome, email, passwordHash);
-            savedUser = clienteRepository.save(newClient);
-        } else {
-            Operatore newOperator = new Operatore(nome, cognome, email, passwordHash);
-            savedUser = operatoreRepository.save(newOperator);
-        }
-
-        return savedUser;
     }
     
 }

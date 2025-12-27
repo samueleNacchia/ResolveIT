@@ -26,18 +26,16 @@ public class RegistraUtenteDTO {
     private String password;
 
     private String confermaPassword;
-    private boolean isClient = true;
 
     public RegistraUtenteDTO() {
     }
 
-    public RegistraUtenteDTO(String nome, String cognome, String email, String password, String confermaPassword, boolean isClient) {
+    public RegistraUtenteDTO(String nome, String cognome, String email, String password, String confermaPassword) {
         this.nome = nome;
         this.cognome = cognome;
         this.email = email;
         this.password = password;
         this.confermaPassword = confermaPassword;
-        this.isClient = isClient;
     }
 
     public String getCognome() {
@@ -70,14 +68,6 @@ public class RegistraUtenteDTO {
 
     public void setConfermaPassword(String confermaPassword) {
         this.confermaPassword = confermaPassword;
-    }
-
-    public boolean isClient() {
-        return isClient;
-    }
-
-    public void setClient(boolean client) {
-        isClient = client;
     }
 
     public String getNome() {
