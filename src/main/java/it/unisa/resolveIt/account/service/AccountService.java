@@ -1,10 +1,12 @@
 package it.unisa.resolveIt.account.service;
 
+import it.unisa.resolveIt.account.dto.MyProfileDTO;
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.entity.Operatore;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,9 @@ public class AccountService{
 
     @Autowired
     private OperatoreRepository operatoreRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Rimuove un account (Cliente o Operatore).
@@ -95,5 +100,92 @@ public class AccountService{
         } else {
             throw new RuntimeException("Operatore non trovato per l'aggiornamento");
         }
+    }
+
+
+
+
+
+    /**
+     * Ritorna i dati di un utente
+     */
+    public MyProfileDTO getUserByEmail(String email) {
+
+        // Cerchiamo l'utente nel DB. Se non esiste, lanciamo un'eccezione.
+        Operatore operatore = operatoreRepository.findByEmail(email);
+
+        if (operatore == null) {
+            Cliente cliente = clienteRepository.findByEmail(email);
+            if (cliente == null) {
+                throw new RuntimeException("Email non registrata!");
+            }
+
+            // DTO popolato con i dati del cliente
+            MyProfileDTO dto = new MyProfileDTO();
+            dto.setNome(cliente.getNome());
+            dto.setCognome(cliente.getCognome());
+            dto.setClient(true);
+
+            return dto;
+        }
+
+        // DTO popolato con i dati dell'operatore
+        MyProfileDTO dto = new MyProfileDTO();
+        dto.setNome(operatore.getNome());
+        dto.setCognome(operatore.getCognome());
+        dto.setClient(false);
+
+        return dto;
+    }
+
+    /**
+     * Modifica i dati (nome,cognome e password) di un utente (cliente o operatore)
+     * Corrisponde a updateUser e updateOpertore
+     */
+    @Transactional
+    public boolean modifyUser(MyProfileDTO userDto) {
+
+        String email = userDto.getEmail();
+        String nome = userDto.getNome();
+        String cognome = userDto.getCognome();
+        String nuovaPassword = userDto.getPassword();
+        String confermaNuovaPassword = userDto.getConfermaPassword();
+        boolean passwordChanged = false;
+
+        Operatore operatore = operatoreRepository.findByEmail(email);
+
+        if (operatore != null) {
+            operatore.setNome(nome);
+            operatore.setCognome(cognome);
+
+            if (nuovaPassword != null && !nuovaPassword.isEmpty()) {
+                if (!nuovaPassword.equals(confermaNuovaPassword)) {
+                    throw new RuntimeException("Le password non coincidono!");
+                }
+                operatore.setPassword(passwordEncoder.encode(nuovaPassword));
+                passwordChanged = true;
+            }
+            return passwordChanged;
+        }
+
+        // Se non è un Operatore, cerchiamo tra i Clienti
+        Cliente cliente = clienteRepository.findByEmail(email);
+
+        if (cliente != null) {
+            cliente.setNome(nome);
+            cliente.setCognome(cognome);
+
+            if (nuovaPassword != null && !nuovaPassword.isEmpty()) {
+                if (!nuovaPassword.equals(confermaNuovaPassword)) {
+                    throw new RuntimeException("Le password non coincidono!");
+                }
+                cliente.setPassword(passwordEncoder.encode(nuovaPassword));
+                passwordChanged = true;
+            }
+            return passwordChanged;
+        }
+
+        throw new RuntimeException("L'utente non è autorizzato alla modifica o non esiste.");
+
     }
 }

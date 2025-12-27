@@ -1,0 +1,49 @@
+:root {
+    --primary-color: #437095;
+    --primary-hover: #355a78;
+
+    --text-color: #333;
+    --light-grey: #666;
+
+    --header-bg: #ffffff;
+    --header-border: #eee;
+
+    --dropdown-bg: #ffffff;
+    --dropdown-border: #f0f0f0;
+    --dropdown-hover: #f8f9fa;
+
+    --footer-bg: #f8f8f8;
+    --footer-border: #ddd;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-color);
+    background-color: #ffffff;
+}
+
+main {
+    flex: 1;
+}
+
+footer {
+    background-color: var(--footer-bg);
+    padding: 1rem 10%;
+    text-align: center;
+    border-top: 1px solid var(--footer-border);
+}
+
