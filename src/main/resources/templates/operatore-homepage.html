@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ResolveIT - Operatore</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{static/css/base.css}">
+    <link rel="stylesheet" th:href="@{static/css/header.css}">
+    <link rel="stylesheet" th:href="@{static/css/footer.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style type="text/tailwindcss">
+        @layer components {
+            .main-container { @apply flex flex-1 overflow-hidden min-h-[calc(100vh-140px)]; }
+            .sidebar { @apply w-72 bg-white border-r border-gray-200 flex-shrink-0 py-12; }
+            .content-area { @apply flex-1 p-12 overflow-y-auto bg-gray-50/50; }
+
+            /* Tab Buttons */
+            .tab-btn { @apply w-full flex items-center justify-between px-10 py-4 transition-all border-r-4 mb-2; }
+            .tab-btn-active { @apply text-blue-700 font-bold border-blue-700; }
+            .tab-btn-inactive { @apply text-gray-800 border-transparent hover:bg-gray-50 font-medium; }
+
+            /* Table Styles Mockup */
+            .card-table { @apply max-w-5xl mx-auto bg-white rounded-xl shadow-md overflow-hidden border border-gray-100; }
+            .table-head { @apply bg-gray-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b; }
+            .row-main { @apply border-b border-gray-50 hover:bg-gray-50/50 transition-colors; }
+
+            /* Buttons Mockup */
+            .btn-take { @apply bg-[#10b981] text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#059669] transition; }
+            .btn-resolve { @apply bg-[#10b981] text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#059669] transition; }
+            .btn-message { @apply bg-[#3b82f6] text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#2563eb] transition; }
+
+            /* Toggle Styles */
+            .toggle-btn { @apply w-8 h-8 flex items-center justify-center rounded-lg text-white font-bold transition-all; }
+            .toggle-plus { @apply bg-blue-600 hover:bg-blue-700; }
+            .toggle-minus { @apply bg-blue-600 rotate-180; }
+
+            .tab-content { display: none; }
+            .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-white min-h-screen flex flex-col">
+
+<header th:replace="~{fragments/header :: header-fragment}"></header>
+
+<div class="main-container">
+    <aside class="sidebar">
+        <nav>
+            <button onclick="switchTab('working')" id="btn-working" class="tab-btn tab-btn-active">
+                <span>My Working Ticket</span>
+                <i class="fa-solid fa-caret-left"></i>
+            </button>
+
+            <button onclick="switchTab('assign')" id="btn-assign" class="tab-btn tab-btn-inactive">
+                <span>Assign New Ticket</span>
+                <i class="fa-solid fa-caret-right"></i>
+            </button>
+        </nav>
+    </aside>
+
+    <main class="content-area">
+
+        <h1 id="tab-title" class="text-4xl font-bold text-slate-800 text-center mb-10">Ticket in Carico</h1>
+
+        <div id="tab-working" class="tab-content active">
+            <div class="card-table">
+                <table class="w-full text-left">
+                    <thead class="table-head">
+                    <tr>
+                        <th class="px-6 py-4 w-16"></th>
+                        <th class="px-6 py-4">ID</th>
+                        <th class="px-6 py-4">Titolo</th>
+                        <th class="px-6 py-4">Categoria</th>
+                        <th class="px-6 py-4">Data</th>
+                        <th class="px-6 py-4 text-center">Azioni</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <th:block th:each="t : ${listaLavoro}">
+                        <tr class="row-main">
+                            <td class="px-6 py-4">
+                                <button th:onclick="'toggleRow(\'work-\' + ' + ${t.ID_T} + ')'" th:id="'btn-work-' + ${t.ID_T}" class="toggle-btn toggle-plus">+</button>
+                            </td>
+                            <td class="px-6 py-4 text-slate-500 font-medium" th:text="'#' + ${t.ID_T}">ID</td>
+                            <td class="px-6 py-4 text-slate-700 font-medium" th:text="${t.titolo}">Titolo</td>
+                            <td class="px-6 py-4 text-slate-600" th:text="${t.categoria}">Categoria</td>
+                            <td class="px-6 py-4 text-slate-600" th:text="${t.dataCreazione}">Data</td>
+                            <td class="px-6 py-4 flex justify-center gap-2">
+                                <form th:action="@{/ticket/risolvi/{id}(id=${t.ID_T})}" method="POST">
+                                    <button type="submit" class="btn-resolve">Risolto</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:id="'detail-work-' + ${t.ID_T}" class="hidden bg-gray-50/30">
+                            <td colspan="6" class="px-20 py-6 border-b border-gray-100">
+                                <div class="space-y-3">
+                                    <p class="text-sm"><strong>Descrizione:</strong><br>
+                                        <span class="text-slate-600" th:text="${t.descrizione}">Dettagli del problema...</span></p>
+                                    <div th:if="${t.allegato != null}" class="text-sm">
+                                        <strong>Allegati:</strong><br>
+                                        <a href="#" class="text-blue-500 hover:underline flex items-center gap-2 mt-1">
+                                            <i class="fa-solid fa-paperclip"></i> <span th:text="${t.allegato}">file</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-assign" class="tab-content">
+            <div class="card-table">
+                <table class="w-full text-left">
+                    <thead class="table-head">
+                    <tr>
+                        <th class="px-6 py-4 w-16"></th>
+                        <th class="px-6 py-4">ID</th>
+                        <th class="px-6 py-4">Titolo</th>
+                        <th class="px-6 py-4">Categoria</th>
+                        <th class="px-6 py-4">Data</th>
+                        <th class="px-6 py-4 text-center">Azioni</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <th:block th:each="t : ${listaAttesa}">
+                        <tr class="row-main">
+                            <td class="px-6 py-4">
+                                <button th:onclick="'toggleRow(\'assign-\' + ' + ${t.ID_T} + ')'" th:id="'btn-assign-' + ${t.ID_T}" class="toggle-btn toggle-plus">+</button>
+                            </td>
+                            <td class="px-6 py-4 text-slate-500 font-medium" th:text="'#' + ${t.ID_T}">ID</td>
+                            <td class="px-6 py-4 text-slate-700 font-medium" th:text="${t.titolo}">Titolo</td>
+                            <td class="px-6 py-4 text-slate-600" th:text="${t.categoria}">Categoria</td>
+                            <td class="px-6 py-4 text-slate-600" th:text="${t.dataCreazione}">Data</td>
+                            <td class="px-6 py-4 text-center">
+                                <form th:action="@{/ticket/prendi/{id}(id=${t.ID_T})}" method="POST">
+                                    <button type="submit" class="btn-take">Prendi in carico</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:id="'detail-assign-' + ${t.ID_T}" class="hidden bg-gray-50/30">
+                            <td colspan="6" class="px-20 py-6 border-b border-gray-100">
+                                <div class="space-y-2">
+                                    <p class="text-sm"><strong>Descrizione:</strong><br>
+                                        <span class="text-slate-600" th:text="${t.descrizione}">Descrizione ticket...</span></p>
+                                </div>
+                            </td>
+                        </tr>
+                    </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<footer th:replace="~{fragments/footer :: footer-fragment}"></footer>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+
+        const btnWorking = document.getElementById('btn-working');
+        const btnAssign = document.getElementById('btn-assign');
+        const title = document.getElementById('tab-title');
+
+        if(tabId === 'working') {
+            btnWorking.className = 'tab-btn tab-btn-active';
+            btnAssign.className = 'tab-btn tab-btn-inactive';
+            title.innerText = 'Ticket in Carico';
+        } else {
+            btnWorking.className = 'tab-btn tab-btn-inactive';
+            btnAssign.className = 'tab-btn tab-btn-active';
+            title.innerText = 'Ticket in attesa';
+        }
+    }
+
+    function toggleRow(id) {
+        const detailRow = document.getElementById('detail-' + id);
+        const btn = document.getElementById('btn-' + id);
+
+        if (detailRow.classList.contains('hidden')) {
+            detailRow.classList.remove('hidden');
+            btn.innerText = '-';
+            btn.classList.replace('toggle-plus', 'toggle-minus');
+        } else {
+            detailRow.classList.add('hidden');
+            btn.innerText = '+';
+            btn.classList.replace('toggle-minus', 'toggle-plus');
+        }
+    }
+</script>
+</body>
+</html>

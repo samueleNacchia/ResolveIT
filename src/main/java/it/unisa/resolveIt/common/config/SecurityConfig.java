@@ -43,9 +43,9 @@ public class SecurityConfig {
                             if (roles.contains("GESTORE")) {
                                 response.sendRedirect("/gestore");
                             } else if (roles.contains("OPERATORE")) {
-                                response.sendRedirect("/home");
+                                response.sendRedirect("/ticket/operatore-home");
                             } else {
-                                response.sendRedirect("/home");
+                                response.sendRedirect("/ticket/home");
                             }
                         })
                         .failureUrl("/login?error=true")
