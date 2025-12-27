@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -48,22 +49,26 @@ public class RegistrazioneController {
         }
 
         try {
-            //Chiama il tuo Service esistente
-            UserDetails user = registrazioneService.registerUser(dto);
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean isGestore = auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("GESTORE"));
 
-            // Autentico il nuovo utente
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(auth);
+            if (isGestore) {
+                // Logica per il Gestore che crea un Operatore
+                registrazioneService.registerOperator(dto);
+                model.addAttribute("successMessage", "Operatore creato con successo!");
+                model.addAttribute("utenteDTO", new RegistraUtenteDTO());
+                return "registrazione";
+            } else {
+                // Logica per l'utente anonimo che si registra come Cliente
+                UserDetails user = registrazioneService.registerClient(dto);
 
-            HttpSession session = request.getSession(true);
-            session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+                // Auto-login per il nuovo Cliente
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+                request.getSession(true).setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
 
-            return "redirect:/home";
-            /*
-            //Successo: Pulisci il form e dai feedback positivo
-            model.addAttribute("utenteDTO", new RegistraUtenteDTO()); // Resetta i campi
-            model.addAttribute("successMessage", "Registrazione completata con successo!");
-             */
+                return "redirect:/home";
+            }
 
         } catch (Exception e) {
             //Errore logico (errore del service)
