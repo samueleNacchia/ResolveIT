@@ -2,68 +2,99 @@ package it.unisa.resolveIt.ticket.control;
 
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.entity.Operatore;
-import it.unisa.resolveIt.model.entity.Ticket;
+import it.unisa.resolveIt.model.repository.CategoriaRepository;
+import it.unisa.resolveIt.model.repository.ClienteRepository;
+import it.unisa.resolveIt.model.repository.OperatoreRepository;
+import it.unisa.resolveIt.ticket.dto.TicketDTO;
 import it.unisa.resolveIt.ticket.service.TicketService;
-import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.security.Principal;
+
 @Controller
+@RequestMapping("/ticket")
 public class TicketController {
 
     @Autowired
     private TicketService ticketService;
 
-    // 1. CREAZIONE TICKET (Visualizza Form)
-    @GetMapping("/nuovo")
-    public String formCreazione(Model model) {
-        model.addAttribute("ticket", new Ticket());
-        return "creaTicket"; // Pagina HTML con il form
-    }
+    @Autowired
+    private ClienteRepository clienteRepository;
 
-    // 2. CREAZIONE TICKET (Salvataggio dati)
-    @PostMapping("/salva")
-    public String salvaTicket(@ModelAttribute Ticket ticket) {
-        ticketService.creaTicket(ticket);
-        return "redirect:/ticket/miei-ticket";
-    }
+    @Autowired
+    private OperatoreRepository operatoreRepository;
 
-    // 3. VISUALIZZAZIONE TICKET UTENTE
-    @GetMapping("/miei-ticket")
-    public String visualizzaMieiTicket(Model model, HttpSession session) {
-        Cliente cliente = (Cliente) session.getAttribute("utenteLoggato");
+    @Autowired
+    private CategoriaRepository categoriaRepository;
+
+    // --- DASHBOARD UNIFICATA CLIENTE ---
+    @PreAuthorize("hasAuthority('CLIENTE')")
+    @GetMapping("/home")
+    public String userHome(Model model, Principal principal) {
+        Cliente cliente = clienteRepository.findByEmail(principal.getName());
         model.addAttribute("lista", ticketService.getTicketUtente(cliente));
-        return "listaTicketUtente";
+        model.addAttribute("ticketDTO", new TicketDTO());
+        model.addAttribute("categorie", categoriaRepository.findAll());
+        return "user-homepage";
     }
 
-    // 4. VISUALIZZAZIONE TICKET DISPONIBILI (Per Operatore)
-    @GetMapping("/disponibili")
-    public String visualizzaDisponibili(Model model) {
-        model.addAttribute("lista", ticketService.getTicketDisponibili());
-        return "listaTicketDisponibili";
+    // --- DASHBOARD UNIFICATA OPERATORE (Per i tuoi Mockup) ---
+    @PreAuthorize("hasAuthority('OPERATORE')")
+    @GetMapping("/operatore-home")
+    public String operatoreHome(Model model, Principal principal) {
+        Operatore operatore = operatoreRepository.findByEmail(principal.getName());
+
+        // Alimenta il tab "My Working Ticket"
+        model.addAttribute("listaLavoro", ticketService.getTicketInCarico(operatore));
+        // Alimenta il tab "Assign New Ticket"
+        model.addAttribute("listaAttesa", ticketService.getTicketDisponibili());
+
+        return "operatore-homepage";
     }
 
-    // 5. PRESA IN CARICO TICKET
-    @PostMapping("/prendi-in-carico/{id}")
-    public String prendiInCarico(@PathVariable Long id, HttpSession session) {
-        Operatore operatore = (Operatore) session.getAttribute("operatoreLoggato");
-        ticketService.prendiInCarico(id, operatore);
-        return "redirect:/ticket/in-carico";
+    // --- AZIONI CLIENTE ---
+    @PreAuthorize("hasAuthority('CLIENTE')")
+    @PostMapping("/salva")
+    public String salvaTicket(@Valid @ModelAttribute("ticketDTO") TicketDTO ticketDTO,
+                              BindingResult result,
+                              Principal principal,
+                              Model model) throws IOException {
+        if (result.hasErrors()) {
+            model.addAttribute("categorie", categoriaRepository.findAll());
+            return "user-homepage"; // Torna alla home se ci sono errori
+        }
+        Cliente cliente = clienteRepository.findByEmail(principal.getName());
+        ticketService.creaTicketDaDTO(ticketDTO, cliente);
+        return "redirect:/ticket/home";
     }
 
-    // 6. ANNULLAMENTO TICKET
-    @PostMapping("/annulla/{id}")
-    public String annulla(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('CLIENTE')")
+    @PostMapping("/elimina/{id}")
+    public String eliminaTicket(@PathVariable Long id) {
         ticketService.annullaTicket(id);
-        return "redirect:/ticket/miei-ticket";
+        return "redirect:/ticket/home";
     }
 
-    // 7. RISOLUZIONE TICKET
+    // --- AZIONI OPERATORE ---
+    @PreAuthorize("hasAuthority('OPERATORE')")
+    @PostMapping("/prendi/{id}")
+    public String prendiInCarico(@PathVariable Long id, Principal principal) {
+        Operatore operatore = operatoreRepository.findByEmail(principal.getName());
+        ticketService.prendiInCarico(id, operatore);
+        return "redirect:/ticket/operatore-home";
+    }
+
+    @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/risolvi/{id}")
     public String risolvi(@PathVariable Long id) {
         ticketService.risolviTicket(id);
-        return "redirect:/ticket/in-carico";
+        return "redirect:/ticket/operatore-home";
     }
 }

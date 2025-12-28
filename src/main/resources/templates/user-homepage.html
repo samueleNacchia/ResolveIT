@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>ResolveIT - Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" th:href="@{/css/base.css}">
+  <link rel="stylesheet" th:href="@{/css/header.css}">
+  <link rel="stylesheet" th:href="@{/css/footer.css}">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style type="text/tailwindcss">
+    @layer components {
+        .main-container { @apply flex flex-1 overflow-hidden min-h-[calc(100vh-180px)]; }
+        .sidebar { @apply w-72 bg-white border-r border-gray-200 flex-shrink-0 py-8; }
+        .content-area { @apply flex-1 p-3 overflow-y-auto bg-gray-50/50; }
+
+        /* Bottoni Sidebar */
+        .tab-btn { @apply w-full flex items-center justify-between px-8 py-4 transition-all border-r-4; }
+        .tab-btn-active { @apply bg-indigo-50 text-indigo-600 border-indigo-600 font-bold; }
+        .tab-btn-inactive { @apply text-gray-500 border-transparent hover:bg-gray-50 font-medium; }
+
+        /* Card e Tabelle */
+        .card-dashboard { @apply max-w-6xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden; }
+        .table-head { @apply bg-gray-50 text-gray-400 text-[11px] uppercase tracking-widest border-b; }
+        .row-main { @apply hover:bg-gray-50 transition-colors; }
+        .row-details { @apply bg-gray-50/50 border-l-4 border-indigo-400; }
+
+        /* Badge e Input */
+        .badge { @apply px-3 py-1 rounded-full text-[10px] font-bold uppercase; }
+        .input-custom { @apply w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none transition; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+<header th:replace="~{fragments/header :: header-fragment}"></header>
+
+<div class="main-container">
+  <aside class="sidebar">
+    <nav class="space-y-2">
+      <button onclick="switchTab('my-tickets')" id="btn-my-tickets" class="tab-btn tab-btn-active">
+        <span>My Tickets</span>
+        <i class="fa-solid fa-list-check"></i>
+      </button>
+
+      <button onclick="switchTab('new-ticket')" id="btn-new-ticket" class="tab-btn tab-btn-inactive">
+        <span>New Ticket</span>
+        <i class="fa-solid fa-plus-circle"></i>
+      </button>
+    </nav>
+  </aside>
+
+  <main class="content-area">
+
+    <div id="tab-my-tickets" class="tab-content active">
+      <div class="card-dashboard">
+        <table class="w-full text-left">
+          <thead class="table-head">
+          <tr>
+            <th class="px-6 py-4">Dati Ticket</th>
+            <th class="px-6 py-4">Stato</th>
+            <th class="px-6 py-4">Allegati</th>
+            <th class="px-6 py-4 text-right">Azioni</th>
+          </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+          <th:block th:each="t : ${lista}">
+            <tr class="row-main">
+              <td class="px-6 py-4">
+                <div class="font-bold text-gray-900" th:text="${t.titolo}">Titolo</div>
+                <div class="text-[10px] text-gray-400" th:text="${#temporals.format(t.dataCreazione, 'dd/MM/yyyy HH:mm')}">Data</div>
+              </td>
+              <td class="px-6 py-4">
+                                        <span th:text="${t.stato}" class="badge"
+                                              th:classappend="${t.stato.name() == 'APERTO' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+                                        </span>
+              </td>
+              <td class="px-6 py-4">
+                <button th:if="${t.allegato != null}" th:onclick="'toggleAttachment(' + ${t.ID_T} + ')'" class="text-indigo-600 font-bold text-xs">
+                  <i class="fa-solid fa-paperclip"></i> Vedi
+                </button>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <form th:action="@{/ticket/elimina/{id}(id=${t.ID_T})}" method="POST" onsubmit="return confirm('Eliminare?')">
+                  <button type="submit" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            <tr th:id="'attachment-row-' + ${t.ID_T}" class="tab-content row-details">
+              <td colspan="4" class="px-8 py-4">
+                <div class="flex items-center gap-3 text-xs text-gray-600">
+                  <i class="fa-solid fa-file-zipper"></i>
+                  <span>Documento caricato</span>
+                  <a th:href="@{/ticket/download/{id}(id=${t.ID_T})}" class="text-indigo-600 underline">Scarica</a>
+                </div>
+              </td>
+            </tr>
+          </th:block>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-new-ticket" class="tab-content">
+      <div class="max-w-3xl mx-auto bg-white p-10 rounded-2xl shadow-sm border border-gray-100">
+        <form th:action="@{/ticket/salva}" th:object="${ticketDTO}" method="POST" enctype="multipart/form-data" class="space-y-6">
+          <div>
+            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Categoria</label>
+            <select th:field="*{idCategoria}" class="input-custom">
+              <option th:each="cat : ${categorie}" th:value="${cat.ID_C}" th:text="${cat.nome}"></option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Titolo</label>
+            <input type="text" th:field="*{titolo}" class="input-custom">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Descrizione</label>
+            <textarea th:field="*{descrizione}" rows="5" class="input-custom resize-none"></textarea>
+          </div>
+          <div class="flex justify-between items-center pt-4">
+            <div class="relative flex items-center gap-4">
+              <input type="file" th:field="*{fileAllegato}" id="file-hidden" class="hidden" accept=".txt,.jpg,.jpeg,.zip">
+
+              <button type="button" onclick="document.getElementById('file-hidden').click()"
+                      class="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl text-sm font-bold transition">
+                <i class="fa-solid fa-paperclip mr-2"></i> Allegato
+              </button>
+
+              <span id="file-name-display" class="text-xs text-gray-400 italic">Nessun file selezionato</span>
+            </div>
+
+            <button type="submit" class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">
+              Invia Ticket
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer th:replace="~{fragments/footer :: footer-fragment}"></footer>
+
+<script>
+  // Funzione per il cambio Tab (Toggle Sezioni)
+  function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+
+      const btnList = document.getElementById('btn-my-tickets');
+      const btnNew = document.getElementById('btn-new-ticket');
+
+      if(tabId === 'my-tickets') {
+          btnList.className = 'tab-btn tab-btn-active';
+          btnNew.className = 'tab-btn tab-btn-inactive';
+      } else {
+          btnList.className = 'tab-btn tab-btn-inactive';
+          btnNew.className = 'tab-btn tab-btn-active';
+      }
+  }
+
+  // Funzione per mostrare/nascondere l'allegato nella tabella
+  function toggleAttachment(id) {
+      const el = document.getElementById('attachment-row-' + id);
+      el.classList.toggle('active');
+  }
+
+  // --- NUOVO: Gestione Validazione e Nome File nell'input ---
+  const fileInput = document.getElementById('file-hidden');
+  const fileNameDisplay = document.getElementById('file-name-display'); // Assicurati di avere questo ID nel testo accanto al bottone
+
+  fileInput.addEventListener('change', function() {
+      const allowedExtensions = /(\.txt|\.jpg|\.jpeg|\.zip)$/i;
+      const filePath = this.value;
+
+      if (this.files.length > 0) {
+          if (!allowedExtensions.exec(filePath)) {
+              // Formato non valido
+              fileNameDisplay.innerHTML = "Errore: Solo .txt, .jpg o .zip!";
+              fileNameDisplay.style.color = "#ef4444"; // Rosso Tailwind
+              this.value = ''; // Resetta l'input
+          } else {
+              // Formato valido
+              fileNameDisplay.innerHTML = '<i class="fa-solid fa-check mr-1"></i> ' + this.files[0].name;
+              fileNameDisplay.style.color = "#4f46e5"; // Indigo Tailwind
+          }
+      } else {
+          fileNameDisplay.innerHTML = "Nessun file selezionato";
+          fileNameDisplay.style.color = "#9ca3af"; // Grigio
+      }
+  });
+</script>
+</body>
+</html>
