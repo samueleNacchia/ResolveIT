@@ -2,6 +2,7 @@ package it.unisa.resolveIt.model.entity;
 
 import it.unisa.resolveIt.model.enums.Stato;
 import jakarta.persistence.*;
+import it.unisa.resolveIt.model.entity.Categoria;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import java.time.LocalDateTime;
@@ -19,7 +20,7 @@ public class Ticket {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoria_id", nullable = false)
-    private CategoriaStub categoria;
+    private Categoria categoria;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
@@ -133,11 +134,11 @@ public class Ticket {
         this.testo = testo;
     }
 
-    public CategoriaStub getCategoria() {
+    public Categoria getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(CategoriaStub categoria) {
+    public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
     }
 
