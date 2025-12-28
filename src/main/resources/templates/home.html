@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Home - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/header.css}">
+    <link rel="stylesheet" th:href="@{/css/footer.css}">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
@@ -18,6 +22,8 @@
     </style>
 </head>
 <body>
+
+<div th:replace="~{fragments/header :: header-fragment}"></div>
 
 <div class="container">
     <h1>Benvenuto, <span th:text="${utente.nome}">Utente</span>!</h1>

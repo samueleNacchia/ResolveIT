@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>ResolveIT - Registrazione</title>
+    <title>ResolveIT - My Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/base.css}">
     <link rel="stylesheet" th:href="@{/css/auth.css}">
@@ -15,24 +15,23 @@
 
 <main class="auth-main">
     <div class="hero-section">
-        <h1>Il tuo helpdesk,<br> sempre sotto<br> controllo</h1>
+        <h1>My Profile</h1>
         <img th:src="@{/images/landingImage.png}" alt="Landing" class="hero-image">
     </div>
 
     <div class="form-section">
         <div class="auth-card">
-            <h2>Crea un account</h2>
+            <h2>Modifica Dati</h2>
 
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
             <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-            <form method="post" th:action="@{/register}" th:object="${utenteDTO}" novalidate>
+            <form method="post" th:action="@{/my-profile}" th:object="${utenteDTO}" novalidate>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label>Nome</label>
                         <input type="text" maxlength="30" th:field="*{nome}"
-                               placeholder="Mario"
                                th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid' : ''">
 
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}">
@@ -45,7 +44,6 @@
                     <div class="form-group">
                         <label>Cognome</label>
                         <input type="text" maxlength="30" th:field="*{cognome}"
-                               placeholder="Rossi"
                                th:classappend="${#fields.hasErrors('cognome')} ? 'is-invalid' : ''">
 
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('cognome')}">
@@ -57,19 +55,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Indirizzo Email</label>
-                    <input type="email" maxlength="100" th:field="*{email}"
-                           placeholder="nome@esempio.com"
-                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''">
-
-                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}">
-                        <span th:with="errs=${#fields.detailedErrors('email')}"
-                              th:text="${errs.?[code == 'NotBlank'].size() > 0 ? errs.?[code == 'NotBlank'][0].message : errs[0].message}">
-                        </span>
-                    </div>
-                </div>
-
-                <div class="form-group">
                     <label>Password</label>
                     <div class="password-wrapper">
                         <input type="password" maxlength="64" th:field="*{password}"
@@ -77,11 +62,7 @@
                                th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''">
                         <i class="fa-solid fa-eye eye-icon"></i>
                     </div>
-                    <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}">
-                        <span th:with="errs=${#fields.detailedErrors('password')}"
-                              th:text="${errs.?[code == 'NotBlank'].size() > 0 ? errs.?[code == 'NotBlank'][0].message : errs[0].message}">
-                        </span>
-                    </div>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
                 </div>
 
                 <div class="form-group">
@@ -95,12 +76,9 @@
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('confermaPassword')}" th:errors="*{confermaPassword}"></div>
                 </div>
 
-                <button type="submit" class="btn-auth">Registrati</button>
+                <button type="submit" class="btn-auth">Modifica</button>
             </form>
 
-            <div class="auth-footer">
-                <p>Hai già un account? <a th:href="@{/login}">Accedi qui</a></p>
-            </div>
         </div>
     </div>
 </main>

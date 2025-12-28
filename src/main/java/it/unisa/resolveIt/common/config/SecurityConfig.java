@@ -28,9 +28,9 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         // Permettiamo solo login, registrazione e risorse statiche
-                        .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/error").permitAll()
                         .requestMatchers("/gestore").hasAuthority("GESTORE")
-                        .requestMatchers("/home").hasAnyAuthority("CLIENTE", "OPERATORE")
+                        .requestMatchers("/home", "/my-profile").hasAnyAuthority("CLIENTE", "OPERATORE")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

@@ -1,25 +1,3 @@
-:root {
-    --primary-color: #437095;
-    --primary-hover: #355a78;
-    --text-color: #333;
-    --light-grey: #666;
-    --border-color: #ddd;
-    --error-bg: #f8d7da;
-    --error-text: #721c24;
-    --success-bg: #d4edda;
-    --success-text: #155724;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    color: var(--text-color);
-    background-color: #ffffff;
-}
-
 /* Layout Principale */
 .auth-main {
     flex: 1;
@@ -97,19 +75,22 @@ label {
     font-size: 0.9rem;
 }
 
-input {
-    width: 100%;
-    padding: 0.8rem;
-    border: 1px solid var(--border-color);
+/* Campi del form */
+input, textarea, select {
+    background-color: #f9f9f9; /* leggermente grigio chiaro */
+    border: 1px solid #ddd;
     border-radius: 8px;
+    padding: 0.8rem;
     font-size: 1rem;
-    transition: border-color 0.2s;
+    width: 100%;
     box-sizing: border-box;
+    transition: border-color 0.2s, background-color 0.2s;
 }
 
-input:focus {
+input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: var(--primary-color);
+    background-color: #fff; /* opzionale: evidenzia il focus */
 }
 
 input.is-invalid {
@@ -159,16 +140,25 @@ input.is-invalid {
     background-color: var(--primary-hover);
 }
 
-/* Alert e Feedback */
 .alert {
-    padding: 0.8rem;
-    margin-bottom: 1.5rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
+    display: block;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
 }
 
-.alert-error { background: var(--error-bg); color: var(--error-text); border: 1px solid #f5c6cb; }
-.alert-success { background: var(--success-bg); color: var(--success-text); border: 1px solid #c3e6cb; }
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
 
 .invalid-feedback {
     color: #dc3545;

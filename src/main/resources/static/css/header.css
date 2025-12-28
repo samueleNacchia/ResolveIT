@@ -1,6 +1,134 @@
-header {
-    padding: 20px 50px;
+
+/* ================= HEADER ================= */
+
+.main-header {
+    background: var(--header-bg);
+    padding: 10px 10%;
+    border-bottom: 1px solid var(--header-border);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.logo-header {
+    height: 50px;
+}
+
+/* ================= USER MENU ================= */
+
+.user-menu-container {
+    position: relative;
+}
+
+.user-trigger {
     display: flex;
     align-items: center;
+    gap: 12px;
+    user-select: none;
 }
-.logo-header { height: 50px; }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Avatar */
+.user-avatar-circle {
+    width: 42px;
+    height: 42px;
+    background-color: #e53935;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.user-full-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+/* Bottone Menu */
+.menu-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.menu-button:hover {
+    background-color: var(--primary-hover);
+}
+
+/* ================= DROPDOWN ================= */
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 55px;
+    min-width: 240px;
+
+    background: var(--dropdown-bg);
+    border: 1px solid var(--dropdown-border);
+    border-radius: 12px;
+
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-list {
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: var(--dropdown-hover);
+}
+
+.dropdown-item i:first-child {
+    width: 25px;
+    font-size: 1.2rem;
+    color: var(--light-grey);
+}
+
+.dropdown-item span {
+    flex-grow: 1;
+    margin-left: 10px;
+}
+
+.separator {
+    height: 1px;
+    background-color: var(--header-border);
+    margin: 5px 0;
+}

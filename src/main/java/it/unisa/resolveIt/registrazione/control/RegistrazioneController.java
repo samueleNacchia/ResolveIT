@@ -1,6 +1,5 @@
 package it.unisa.resolveIt.registrazione.control;
 
-import it.unisa.resolveIt.registrazione.service.RegistrazioneImpl;
 import it.unisa.resolveIt.registrazione.dto.RegistraUtenteDTO;
 import it.unisa.resolveIt.registrazione.service.RegistrazioneService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +35,13 @@ public class RegistrazioneController {
     @PostMapping("/register")
     public String registerUserAccount(@Valid @ModelAttribute("utenteDTO") RegistraUtenteDTO dto, BindingResult result, Model model, HttpServletRequest request) {
 
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            if (!dto.getPassword().equals(dto.getConfermaPassword())) {
+                // Aggiungiamo l'errore SOLO al campo confermaPassword
+                result.rejectValue("confermaPassword", "error.match", "Le password non coincidono");
+            }
+        }
+
         //Controllo validazione formale (es. campi vuoti)
         if (result.hasErrors()) {
             return "registrazione"; // Ritorna alla pagina mostrando gli errori
@@ -62,7 +68,6 @@ public class RegistrazioneController {
         } catch (Exception e) {
             //Errore logico (errore del service)
             model.addAttribute("errorMessage", e.getMessage());
-            result.rejectValue("confermaPassword", "error.match", e.getMessage());
             return "registrazione";
         }
     }

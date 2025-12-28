@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <title>ResolveIT - Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
     <link rel="stylesheet" th:href="@{/css/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/header.css}">
+    <link rel="stylesheet" th:href="@{/css/footer.css}">
 </head>
 <body>
 
@@ -22,6 +25,7 @@
 
             <div th:if="${param.error}" class="alert alert-error">Email o password non valide.</div>
             <div th:if="${param.logout}" class="alert alert-success">Sei uscito correttamente.</div>
+            <div th:if="${passwordSuccess}" class="alert alert-success" th:text="${passwordSuccess}"></div>
 
             <form th:action="@{/login}" method="post" novalidate>
                 <div class="form-group">

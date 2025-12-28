@@ -1,5 +1,64 @@
+<header th:fragment="header-fragment"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+        class="main-header">
 
-<header th:fragment="header-fragment" xmlns:th="http://www.thymeleaf.org">
-    <link rel="stylesheet" th:href="@{/css/header.css}">
-    <img th:src="@{/images/logo.png}" alt="ResolveIT Logo" class="logo-header">
+    <div class="header-container">
+        <a th:href="@{/}">
+            <img th:src="@{/images/logo.png}" alt="Logo" class="logo-header">
+        </a>
+
+        <div class="user-menu-container" sec:authorize="isAuthenticated()">
+
+            <div class="user-trigger" id="dropdownTrigger">
+
+                <div class="user-info" sec:authorize="hasAnyAuthority('CLIENTE','OPERATORE')">
+                    <div class="user-avatar-circle" >
+                        <span th:with="p=${#authentication.principal}"
+                              th:text="${p.nome != null && p.cognome != null} ?
+                                       (${p.nome.substring(0,1) + p.cognome.substring(0,1)}) :
+                                       (${#authentication.name.substring(0,1).toUpperCase()})">
+                            U
+                        </span>
+                    </div>
+
+                    <span class="user-full-name"
+                          th:with="p=${#authentication.principal}"
+                          th:text="${p.nome != null && p.cognome != null} ?
+                       (${p.nome + ' ' + p.cognome}) :
+                       (${#authentication.name})">
+                        Utente
+                    </span>
+                </div>
+
+                <button type="button" class="menu-button" id="menuButton">
+                    <i class="fa-solid fa-bars"></i>
+                    Menu
+                </button>
+            </div>
+
+            <div class="dropdown-content" id="userDropdown">
+                <ul class="dropdown-list">
+                    <li sec:authorize="hasAnyAuthority('CLIENTE','OPERATORE')">
+                        <a th:href="@{/my-profile}" class="dropdown-item">
+                            <i class="fa-solid fa-user"></i>
+                            <span>MyProfile</span>
+                        </a>
+                    </li>
+
+                    <li class="separator" sec:authorize="hasAnyAuthority('CLIENTE','OPERATORE')"></li>
+
+                    <li>
+                        <form th:action="@{/logout}" method="post" id="logoutForm" style="display:none;"></form>
+                        <a href="javascript:void(0)" onclick="document.getElementById('logoutForm').submit();" class="dropdown-item">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/menu.js}"></script>
 </header>
