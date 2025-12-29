@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <title>ResolveIT - Operatore</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" th:href="@{static/css/base.css}">
-    <link rel="stylesheet" th:href="@{static/css/header.css}">
-    <link rel="stylesheet" th:href="@{static/css/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/header.css}">
+    <link rel="stylesheet" th:href="@{/css/footer.css}">
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style type="text/tailwindcss">
@@ -90,6 +90,14 @@
                             <td class="px-6 py-4 flex justify-center gap-2">
                                 <form th:action="@{/ticket/risolvi/{id}(id=${t.ID_T})}" method="POST">
                                     <button type="submit" class="btn-resolve">Risolto</button>
+                                </form>
+
+                                <form th:action="@{/ticket/rilascia/{id}(id=${t.id})}" method="POST">
+                                    <button type="submit"
+                                            class="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                                            onclick="return confirm('Vuoi davvero rilasciare questo ticket? Tornerà visibile a tutti gli operatori.')">
+                                        Rilascia
+                                    </button>
                                 </form>
                             </td>
                         </tr>

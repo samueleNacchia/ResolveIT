@@ -34,7 +34,6 @@ public class TicketController {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
-    // --- DASHBOARD UNIFICATA CLIENTE ---
     @PreAuthorize("hasAuthority('CLIENTE')")
     @GetMapping("/home")
     public String userHome(Model model, Principal principal) {
@@ -45,21 +44,17 @@ public class TicketController {
         return "user-homepage";
     }
 
-    // --- DASHBOARD UNIFICATA OPERATORE (Per i tuoi Mockup) ---
     @PreAuthorize("hasAuthority('OPERATORE')")
     @GetMapping("/operatore-home")
     public String operatoreHome(Model model, Principal principal) {
         Operatore operatore = operatoreRepository.findByEmail(principal.getName());
 
-        // Alimenta il tab "My Working Ticket"
         model.addAttribute("listaLavoro", ticketService.getTicketInCarico(operatore));
-        // Alimenta il tab "Assign New Ticket"
         model.addAttribute("listaAttesa", ticketService.getTicketDisponibili());
 
         return "operatore-homepage";
     }
 
-    // --- AZIONI CLIENTE ---
     @PreAuthorize("hasAuthority('CLIENTE')")
     @PostMapping("/salva")
     public String salvaTicket(@Valid @ModelAttribute("ticketDTO") TicketDTO ticketDTO,
@@ -68,33 +63,39 @@ public class TicketController {
                               Model model) throws IOException {
         if (result.hasErrors()) {
             model.addAttribute("categorie", categoriaRepository.findAll());
-            return "user-homepage"; // Torna alla home se ci sono errori
+            return "user-homepage";
         }
         Cliente cliente = clienteRepository.findByEmail(principal.getName());
-        ticketService.creaTicketDaDTO(ticketDTO, cliente);
+        ticketService.addTicket(ticketDTO, cliente);
         return "redirect:/ticket/home";
     }
 
     @PreAuthorize("hasAuthority('CLIENTE')")
     @PostMapping("/elimina/{id}")
     public String eliminaTicket(@PathVariable Long id) {
-        ticketService.annullaTicket(id);
+        ticketService.deleteTicket(id);
         return "redirect:/ticket/home";
     }
 
-    // --- AZIONI OPERATORE ---
     @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/prendi/{id}")
     public String prendiInCarico(@PathVariable Long id, Principal principal) {
         Operatore operatore = operatoreRepository.findByEmail(principal.getName());
-        ticketService.prendiInCarico(id, operatore);
+        ticketService.assignTicket(id, operatore);
         return "redirect:/ticket/operatore-home";
     }
 
     @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/risolvi/{id}")
     public String risolvi(@PathVariable Long id) {
-        ticketService.risolviTicket(id);
+        ticketService.resolveTicket(id);
+        return "redirect:/ticket/operatore-home";
+    }
+
+    @PreAuthorize("hasAuthority('OPERATORE')")
+    @PostMapping("/rilascia/{id}")
+    public String rilascia(@PathVariable Long id) {
+        ticketService.releaseTicket(id);
         return "redirect:/ticket/operatore-home";
     }
 }
