@@ -39,12 +39,12 @@ public class RegistrazioneImpl implements RegistrazioneService{
 
     @Override
     @PreAuthorize("hasAuthority('GESTORE')")
-    public UserDetails registerOperator(RegistraUtenteDTO dto) {
+    public void registerOperator(RegistraUtenteDTO dto) {
         validateRegistration(dto);
         String passwordHash = passwordEncoder.encode(dto.getPassword());
 
         Operatore nuovoOperatore = new Operatore(dto.getNome(), dto.getCognome(), dto.getEmail(), passwordHash);
-        return operatoreRepository.save(nuovoOperatore);
+        operatoreRepository.save(nuovoOperatore);
     }
 
 

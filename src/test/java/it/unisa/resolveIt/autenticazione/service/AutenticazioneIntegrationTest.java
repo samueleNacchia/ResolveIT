@@ -94,6 +94,6 @@ public class AutenticazioneIntegrationTest {
                         .param("password", passInChiaro)
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/home")); // Successo MP2
+                .andExpect(redirectedUrl("/ticket/home")); // Successo MP2
     }
 }

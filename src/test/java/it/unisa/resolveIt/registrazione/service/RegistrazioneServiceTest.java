@@ -74,9 +74,8 @@ class RegistrazioneServiceTest {
         when(operatoreRepository.save(any(Operatore.class))).thenReturn(operatoreSalvato);
 
         // THEN: Chiamiamo il metodo
-        UserDetails risultato = registrazioneService.registerOperator(dto);
+        registrazioneService.registerOperator(dto);
 
-        assertNotNull(risultato);
         verify(operatoreRepository, times(1)).save(any(Operatore.class)); // Verifica che il save sia stato chiamato
     }
 }

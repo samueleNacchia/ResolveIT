@@ -120,7 +120,7 @@ public class RegistrazioneIntegrationTest {
         Cliente clienteFinto = new Cliente("Mario", "Rossi", "mario@email.it", "hashedPass");
 
         when(registrazioneService.registerClient(any(RegistraUtenteDTO.class))).thenReturn(clienteFinto);
-        when(clienteRepository.save((Cliente) any(Cliente.class))).thenReturn(clienteFinto);
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteFinto);
         when(clienteRepository.existsByEmail("mario@email.it")).thenReturn(false);
         when(operatoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
 
@@ -140,8 +140,7 @@ public class RegistrazioneIntegrationTest {
     private void registrazioneOperatore_Successo() throws Exception {
         Operatore operatoreFinto = new Operatore("Mario", "Rossi", "mario@email.it", "hashedPass");
 
-        when(registrazioneService.registerOperator(any(RegistraUtenteDTO.class))).thenReturn(operatoreFinto);
-        when(operatoreRepository.save((Operatore) any(Operatore.class))).thenReturn(operatoreFinto);
+        when(operatoreRepository.save(any(Operatore.class))).thenReturn(operatoreFinto);
         when(clienteRepository.existsByEmail("mario@email.it")).thenReturn(false);
         when(operatoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
 
