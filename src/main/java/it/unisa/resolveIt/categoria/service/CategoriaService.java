@@ -1,7 +1,6 @@
 package it.unisa.resolveIt.categoria.service;
 
 
-import it.unisa.resolveIt.model.enums.StatoCategoria;
 import it.unisa.resolveIt.model.repository.CategoriaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,6 @@
 package it.unisa.resolveIt.model.entity;
 
 
-import it.unisa.resolveIt.model.enums.StatoCategoria;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,12 +17,12 @@ public class Categoria {
     @NotBlank @Pattern(regexp = "^[A-ZÀ-ÿa-z\\s]{3,50}$")
     String nome;
     @NotBlank
-    StatoCategoria stato;
+    boolean stato;
 
     public Categoria() {
     }
 
-    public Categoria(String nome, StatoCategoria stato) {
+    public Categoria(String nome, boolean stato) {
 
         this.nome = nome;
         this.stato = stato;
@@ -45,11 +44,11 @@ public class Categoria {
                 '}';
     }
 
-    public StatoCategoria getStato() {
+    public boolean getStato() {
         return stato;
     }
 
-    public void setStato(StatoCategoria stato) {
+    public void setStato(boolean stato) {
         this.stato = stato;
     }
 
@@ -69,15 +68,15 @@ public class Categoria {
         this.ID_C = ID_C;
     }
     public boolean disable  (){
-        if (stato == StatoCategoria.ATTIVO)
-        {   stato = StatoCategoria.DISATTIVATO;
+        if (stato == true)
+        {   stato = false;
             return true;
         }
         else return false;
     }
     public boolean enable  (){
-        if (stato == StatoCategoria.DISATTIVATO)
-        {   stato = StatoCategoria.ATTIVO;
+        if (stato == false)
+        {   stato = true;
             return true;
         }
         else return false;

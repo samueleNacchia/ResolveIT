@@ -1,6 +1,5 @@
 package it.unisa.resolveIt.model.repository;
 
-import it.unisa.resolveIt.model.enums.StatoCategoria;
 import org.springframework.data.jpa.repository.JpaRepository;
 import it.unisa.resolveIt.model.entity.Categoria;
 import org.springframework.stereotype.Repository;
@@ -12,7 +11,7 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     @Override
     List<Categoria> findAll();
     Categoria findByNome(String nome);
-    List<Categoria> findAllByStato(StatoCategoria stato);
+    List<Categoria> findAllByStato(boolean stato);
     @Override
     Optional<Categoria> findById(Long id);
 }
