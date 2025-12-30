@@ -2,12 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <title>ResolveIT - Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" th:href="@{/css/base.css}">
   <link rel="stylesheet" th:href="@{/css/header.css}">
   <link rel="stylesheet" th:href="@{/css/footer.css}">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script th:src="@{/js/ticket-actions.js}"></script>
 
   <style type="text/tailwindcss">
     @layer components {
@@ -39,6 +43,16 @@
 <body>
 
 <header th:replace="~{fragments/header :: header-fragment}"></header>
+
+<div th:if="${successMessage}"
+     class="max-w-6xl mx-auto mt-4 p-4 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold"
+     th:text="${successMessage}">
+</div>
+
+<div th:if="${errorMessage}"
+     class="max-w-6xl mx-auto mt-4 p-4 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold"
+     th:text="${errorMessage}">
+</div>
 
 <div class="main-container">
   <aside class="sidebar">
@@ -147,54 +161,5 @@
 
 <footer th:replace="~{fragments/footer :: footer-fragment}"></footer>
 
-<script>
-  // Funzione per il cambio Tab (Toggle Sezioni)
-  function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.getElementById('tab-' + tabId).classList.add('active');
-
-      const btnList = document.getElementById('btn-my-tickets');
-      const btnNew = document.getElementById('btn-new-ticket');
-
-      if(tabId === 'my-tickets') {
-          btnList.className = 'tab-btn tab-btn-active';
-          btnNew.className = 'tab-btn tab-btn-inactive';
-      } else {
-          btnList.className = 'tab-btn tab-btn-inactive';
-          btnNew.className = 'tab-btn tab-btn-active';
-      }
-  }
-
-  // Funzione per mostrare/nascondere l'allegato nella tabella
-  function toggleAttachment(id) {
-      const el = document.getElementById('attachment-row-' + id);
-      el.classList.toggle('active');
-  }
-
-  // --- NUOVO: Gestione Validazione e Nome File nell'input ---
-  const fileInput = document.getElementById('file-hidden');
-  const fileNameDisplay = document.getElementById('file-name-display'); // Assicurati di avere questo ID nel testo accanto al bottone
-
-  fileInput.addEventListener('change', function() {
-      const allowedExtensions = /(\.txt|\.jpg|\.jpeg|\.zip)$/i;
-      const filePath = this.value;
-
-      if (this.files.length > 0) {
-          if (!allowedExtensions.exec(filePath)) {
-              // Formato non valido
-              fileNameDisplay.innerHTML = "Errore: Solo .txt, .jpg o .zip!";
-              fileNameDisplay.style.color = "#ef4444"; // Rosso Tailwind
-              this.value = ''; // Resetta l'input
-          } else {
-              // Formato valido
-              fileNameDisplay.innerHTML = '<i class="fa-solid fa-check mr-1"></i> ' + this.files[0].name;
-              fileNameDisplay.style.color = "#4f46e5"; // Indigo Tailwind
-          }
-      } else {
-          fileNameDisplay.innerHTML = "Nessun file selezionato";
-          fileNameDisplay.style.color = "#9ca3af"; // Grigio
-      }
-  });
-</script>
 </body>
 </html>
