@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import java.util.Set;
 
 
-// Ridireziona le pagine di errore alla home dell'utente loggato oppure alla pagina di login
 @ControllerAdvice
 public class ErrorHandler {
 
@@ -24,8 +23,11 @@ public class ErrorHandler {
 
             if (roles.contains("GESTORE")) {
                 return "redirect:/gestore";
+            } else if (roles.contains("OPERATORE")) {
+                return "redirect:/ticket/operatore-home";
+            } else if (roles.contains("CLIENTE")) {
+                return "redirect:/ticket/home";
             }
-            return "redirect:/home";
         }
 
         return "redirect:/login";

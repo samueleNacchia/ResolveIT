@@ -32,7 +32,6 @@ public class SecurityConfig {
                         .requestMatchers("/gestore").hasAuthority("GESTORE")
                         .requestMatchers("/ticket/home", "/ticket/salva", "/ticket/elimina/**").hasAuthority("CLIENTE")
                         .requestMatchers("/ticket/operatore-home", "/ticket/prendi/**", "/ticket/risolvi/**", "/ticket/rilascia/**").hasAuthority("OPERATORE")
-                        .requestMatchers("/home", "/my-profile").hasAnyAuthority("CLIENTE", "OPERATORE")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -61,15 +60,16 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .exceptionHandling(exception -> exception
-                        // Se un utente prova ad accedere a una pagina senza permessi (es. Cliente su /gestore)
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                             if (auth != null) {
                                 Set<String> roles = AuthorityUtils.authorityListToSet(auth.getAuthorities());
                                 if (roles.contains("GESTORE")) {
                                     response.sendRedirect("/gestore");
+                                } else if (roles.contains("OPERATORE")) {
+                                    response.sendRedirect("/ticket/operatore-home");
                                 } else {
-                                    response.sendRedirect("/home");
+                                    response.sendRedirect("/ticket/home");
                                 }
                             } else {
                                 response.sendRedirect("/login");

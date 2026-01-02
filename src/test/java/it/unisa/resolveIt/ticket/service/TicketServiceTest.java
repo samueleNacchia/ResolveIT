@@ -509,7 +509,7 @@ class TicketServiceTest {
     void getTicketUtente_Successo() {
         Cliente c = new Cliente();
         ticketService.getTicketUtente(c);
-        verify(ticketRepository).findByCliente(c);
+        verify(ticketRepository).findByClienteOrderByDataCreazioneDesc(c);
     }
 
 

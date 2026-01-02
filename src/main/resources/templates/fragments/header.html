@@ -13,20 +13,20 @@
             <div class="user-trigger" id="dropdownTrigger">
 
                 <div class="user-info" sec:authorize="hasAnyAuthority('CLIENTE','OPERATORE')">
-                    <div class="user-avatar-circle" >
-                        <span th:with="p=${#authentication.principal}"
-                              th:text="${p.nome != null && p.cognome != null} ?
-                                       (${p.nome.substring(0,1) + p.cognome.substring(0,1)}) :
-                                       (${#authentication.name.substring(0,1).toUpperCase()})">
-                            U
-                        </span>
+                    <div class="user-avatar-circle">
+                    <span th:with="p=${#authentication.principal}"
+                          th:text="${p != null and #strings.contains(p.getClass().getName(), 'it.unisa') ?
+                                    p.nome.substring(0,1).toUpperCase() + p.cognome.substring(0,1).toUpperCase() :
+                                    #authentication.name.substring(0,1).toUpperCase()}">
+                        U
+                    </span>
                     </div>
 
                     <span class="user-full-name"
                           th:with="p=${#authentication.principal}"
-                          th:text="${p.nome != null && p.cognome != null} ?
-                       (${p.nome + ' ' + p.cognome}) :
-                       (${#authentication.name})">
+                          th:text="${p != null and #strings.contains(p.getClass().getName(), 'it.unisa') ?
+                   p.nome + ' ' + p.cognome :
+                   #authentication.name}">
                         Utente
                     </span>
                 </div>
