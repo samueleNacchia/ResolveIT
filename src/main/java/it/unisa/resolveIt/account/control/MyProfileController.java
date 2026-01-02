@@ -1,7 +1,7 @@
 package it.unisa.resolveIt.account.control;
 
 import it.unisa.resolveIt.account.dto.MyProfileDTO;
-import it.unisa.resolveIt.account.service.AccountService;
+import it.unisa.resolveIt.account.service.AccountImpl;
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.entity.Operatore;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class MyProfileController {
 
     @Autowired
-    private AccountService accountService;
+    private AccountImpl accountImpl;
 
     // GET: Carica la pagina del profilo pre-compilando i campi con i dati attuali dell'utente loggato.
     @GetMapping("/my-profile")
@@ -29,7 +29,7 @@ public class MyProfileController {
 
         // Recuperiamo i dati reali dal database usando l'email sicura della sessione
         String email = userDetails.getUsername();
-        MyProfileDTO currentData = accountService.getUserByEmail(email);
+        MyProfileDTO currentData = accountImpl.getUserByEmail(email);
 
         // Passiamo il DTO pieno al form
         model.addAttribute("utenteDTO", currentData);
@@ -56,7 +56,7 @@ public class MyProfileController {
         try {
 
             dto.setEmail(userDetails.getUsername());
-            boolean passwordChanged = accountService.modifyUser(dto);
+            boolean passwordChanged = accountImpl.modifyUser(dto);
 
             if (userDetails instanceof Operatore op) {
                 op.setNome(dto.getNome());

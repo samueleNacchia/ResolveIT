@@ -1,73 +1,32 @@
 package it.unisa.resolveIt.categoria.service;
 
-
-import it.unisa.resolveIt.model.repository.CategoriaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import it.unisa.resolveIt.model.entity.Categoria;
-import java.util.Optional;
-
-@Service
-public class CategoriaService{
-
-    @Autowired
-    //Categoria repository
-    private CategoriaRepository categoriaRepository ;
-
-    @Transactional
-    public Boolean disableCategoria(long id) {
-        Optional<Categoria> esistente = categoriaRepository.findById(id);
-        if (esistente.isPresent()) {
-            if(esistente.get().disable())
-            {   categoriaRepository.save(esistente.get());
-                return true;
-            }
-            else return false;
-        }
-        else
-            throw new RuntimeException("Categoria non trovata per l'aggiornamento");
-    }
-    @Transactional
-    public Boolean enableCategoria(long id) {
-        Optional<Categoria> esistente = categoriaRepository.findById(id);
-
-        if (esistente.isPresent()) {
-            if(esistente.get().enable())
-            {   categoriaRepository.save(esistente.get());
-                return true;
-            }
-            else return false;
-        }
-        else
-            throw new RuntimeException("Categoria non trovata per l'aggiornamento");
-    }
 
 
-    @Transactional
-    public Boolean addCategoria(Categoria categoria) {
-        if (categoriaRepository.existsById(categoria.getID_C()))
-            return false;
-        else
-            categoriaRepository.save(categoria);
-        return true;
-    }
+public interface CategoriaService {
+    /**
+    * Disabilita una categoria facendo in modo che non possano essere creati nuovi ticket che fanno riferimento a essa
+    * @param id è un intero lungo che contiene la chiave primaria della categoria per trovarla nel database
+    */
+    public void disableCategoria(long id) ;
+    /**
+     * Riabilita una categoria facendo in modo che possano essere creati nuovi ticket che fanno riferimento a essa
+     * @param id è un intero lungo che contiene la chiave primaria della categoria per trovarla nel database
+     */
+    public void enableCategoria(long id) ;
 
+    /**
+     * Crea una nuova categoria a cui i ticket possono fare riferimento
+     * @param categoria è un oggetto da memorizzare in modo persistente se non già presente nel database
+     * */
+    public void addCategoria(Categoria categoria) ;
 
-    @Transactional
-    public boolean updateCategoria(Categoria categoria) {
-        if (categoria == null) {
-            throw new IllegalArgumentException("Dati categoria non validi");
-        }
+    /**
+     * Aggiorna una categoria già esistente
+     * @param categoria è un oggetto contenente l'identificativo della categoria da modificare, e i parametri di
+     * come andrà modificata
+     */
+    public void updateCategoria(Categoria categoria);
 
-        Optional<Categoria> esistente = categoriaRepository.findById(categoria.getID_C());
-
-        if (esistente.isPresent()) {
-            esistente.get().setNome(categoria.getNome());
-            categoriaRepository.save(esistente.get());
-            return true;
-        } else
-            return false;
 
     }
-}
