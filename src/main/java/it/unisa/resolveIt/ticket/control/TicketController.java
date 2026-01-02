@@ -2,6 +2,7 @@ package it.unisa.resolveIt.ticket.control;
 
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.entity.Operatore;
+import it.unisa.resolveIt.model.entity.Ticket;
 import it.unisa.resolveIt.model.repository.CategoriaRepository;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
@@ -9,6 +10,9 @@ import it.unisa.resolveIt.ticket.dto.TicketDTO;
 import it.unisa.resolveIt.ticket.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -63,6 +67,7 @@ public class TicketController {
                               Principal principal,
                               Model model, RedirectAttributes redirectAttributes) throws IOException {
         if (result.hasErrors()) {
+            result.getAllErrors().forEach(err -> System.out.println("ERRORE VALIDAZIONE: " + err.getDefaultMessage()));
             model.addAttribute("categorie", categoriaRepository.findAll());
             return "user-homepage";
         }
@@ -95,16 +100,27 @@ public class TicketController {
 
     @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/prendi/{id}")
-    public String prendiInCarico(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
-        Operatore operatore = operatoreRepository.findByEmail(principal.getName());
-        boolean success = ticketService.assignTicket(id, operatore);
-        if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "Ticket assegnato con successo!");
-            return "redirect:/ticket/operatore-home";
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Operazione fallita");
-            return "redirect:/ticket/operatore-home";
+    public String prendiInCarico(@PathVariable("id") Long id, Principal principal, RedirectAttributes redirectAttributes) {
+
+        if (principal == null) {
+            return "redirect:/login";
         }
+
+        Operatore operatore = operatoreRepository.findByEmail(principal.getName());
+
+        try {
+            boolean success = ticketService.assignTicket(id, operatore);
+            if (success) {
+                redirectAttributes.addFlashAttribute("successMessage", "Ticket assegnato correttamente!");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Impossibile assegnare il ticket (ID non trovato o già in carico)");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("errorMessage", "Errore interno: " + e.getMessage());
+        }
+
+        return "redirect:/ticket/operatore-home";
     }
 
     @PreAuthorize("hasAuthority('OPERATORE')")
@@ -131,5 +147,18 @@ public class TicketController {
             redirectAttributes.addFlashAttribute("errorMessage", "Operazione fallita");
             return "redirect:/ticket/operatore-home";
         }
+    }
+
+    @GetMapping("/download/{id}")
+    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+        Ticket t = ticketService.getTicketById(id);
+
+        // Ora usiamo il nome reale recuperato dal DB!
+        String nome = (t.getNomeFile() != null) ? t.getNomeFile() : "allegato.dat";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nome + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(t.getAllegato());
     }
 }

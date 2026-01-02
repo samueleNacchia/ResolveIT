@@ -1,26 +1,20 @@
-// ticket-actions.js
-
+// Funzioni globali (devono stare fuori per essere viste dai th:onclick)
 function switchTab(tabId) {
-    // 1. Nascondi tutti i contenuti dei tab e mostra quello selezionato
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     const targetContent = document.getElementById('tab-' + tabId);
     if (targetContent) targetContent.classList.add('active');
 
-    // 2. Gestisci lo stato visuale di TUTTI i bottoni nella sidebar
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        // Rimuoviamo lo stato attivo e mettiamo quello inattivo a tutti
         btn.classList.remove('tab-btn-active');
         btn.classList.add('tab-btn-inactive');
     });
 
-    // 3. Attiva solo il bottone cliccato
     const activeBtn = document.getElementById('btn-' + tabId);
     if (activeBtn) {
         activeBtn.classList.remove('tab-btn-inactive');
         activeBtn.classList.add('tab-btn-active');
     }
 
-    // 4. Aggiorna il titolo della pagina (opzionale)
     const title = document.getElementById('tab-title');
     if (title) {
         title.innerText = (tabId === 'working') ? 'Ticket in Carico' : 'Ticket in Attesa';
@@ -30,17 +24,19 @@ function switchTab(tabId) {
 function toggleRow(id) {
     const detailRow = document.getElementById('detail-' + id);
     const btn = document.getElementById('btn-' + id);
-
     if (detailRow && btn) {
-        if (detailRow.classList.contains('hidden')) {
-            detailRow.classList.remove('hidden');
-            btn.innerText = '-';
-            btn.classList.replace('toggle-plus', 'toggle-minus');
-        } else {
-            detailRow.classList.add('hidden');
-            btn.innerText = '+';
-            btn.classList.replace('toggle-minus', 'toggle-plus');
-        }
+        const isHidden = detailRow.classList.contains('hidden');
+        detailRow.classList.toggle('hidden');
+        btn.innerText = isHidden ? '-' : '+';
+        btn.classList.toggle('toggle-plus', !isHidden);
+        btn.classList.toggle('toggle-minus', isHidden);
+    }
+}
+
+function toggleAttachment(id) {
+    const row = document.getElementById('attachment-row-' + id);
+    if (row) {
+        row.classList.toggle('hidden');
     }
 }
 
@@ -48,8 +44,8 @@ function confirmAction(id, azione) {
     const config = {
         rilascia: { title: 'Rilasciare il ticket?', text: 'Tornerà disponibile per altri operatori.', icon: 'warning', color: '#ef4444', url: '/ticket/rilascia/' },
         risolvi: { title: 'Risolvere il ticket?', text: 'Il ticket verrà chiuso definitivamente.', icon: 'success', color: '#10b981', url: '/ticket/risolvi/' },
-        assegna: { title: 'Prendere in carico?', text: 'Il ticket verrà assegnato a te.', icon: 'info', color: '#4f46e5', url: '/ticket/assegna/' },
-        elimina: { title: 'Eliminare il ticket?', text: 'L\'azione è irreversibile.', icon: 'warning', color: '#ef4444', url: '/ticket/elimina/' }
+        prendi: { title: 'Prendere in carico?', text: 'Il ticket verrà assegnato a te.', icon: 'info', color: '#4f46e5', url: '/ticket/prendi/' },
+        elimina: { title: 'Annullare il ticket?', text: 'L\'azione cambierà lo stato in ANNULLATO.', icon: 'warning', color: '#ef4444', url: '/ticket/elimina/' }
     };
 
     const c = config[azione];
@@ -67,19 +63,48 @@ function confirmAction(id, azione) {
         if (result.isConfirmed) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = c.url + id;
+            form.action = window.location.origin + c.url + id;
 
-            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-            if (csrfToken) {
+            const token = document.querySelector('meta[name="_csrf"]')?.content;
+            if (token) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = '_csrf';
-                input.value = csrfToken;
+                input.value = token;
                 form.appendChild(input);
             }
-
             document.body.appendChild(form);
             form.submit();
         }
     });
 }
+
+// Logiche da eseguire al caricamento della pagina
+document.addEventListener('DOMContentLoaded', function() {
+
+    // 1. Gestione nome file allegato
+    const fileInput = document.getElementById('file-hidden');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    if (fileInput && fileNameDisplay) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileNameDisplay.textContent = this.files[0].name;
+                fileNameDisplay.classList.remove('text-gray-400', 'italic');
+                fileNameDisplay.classList.add('text-indigo-600', 'font-bold');
+            } else {
+                fileNameDisplay.textContent = "Nessun file selezionato";
+                fileNameDisplay.classList.add('text-gray-400', 'italic');
+            }
+        });
+    }
+
+    // 2. Sparizione automatica banner (5 secondi)
+    const alerts = document.querySelectorAll('.flash-message');
+    alerts.forEach(function(alert) {
+        setTimeout(function() {
+            alert.style.transition = 'opacity 0.5s ease';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        }, 5000);
+    });
+});

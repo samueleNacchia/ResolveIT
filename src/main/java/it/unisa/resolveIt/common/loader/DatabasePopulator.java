@@ -1,8 +1,10 @@
 package it.unisa.resolveIt.common.loader;
 
+import it.unisa.resolveIt.model.entity.Categoria;
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.entity.Gestore;
 import it.unisa.resolveIt.model.entity.Operatore;
+import it.unisa.resolveIt.model.repository.CategoriaRepository;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
 import it.unisa.resolveIt.model.repository.GestoreRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
@@ -25,6 +27,9 @@ public class DatabasePopulator implements CommandLineRunner {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CategoriaRepository categoriaRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -61,6 +66,20 @@ public class DatabasePopulator implements CommandLineRunner {
             System.out.println("Gestore registrato!");
         } else {
             System.out.println("Gestore già registrato. Salto il caricamento.");
+        }
+
+        if (categoriaRepository.count() == 0) {
+            Categoria cat1 = new Categoria();
+            cat1.setNome("Hardware");
+            cat1.enable();
+            categoriaRepository.save(cat1);
+
+            Categoria cat2 = new Categoria();
+            cat2.setNome("Software");
+            cat2.enable();
+            categoriaRepository.save(cat2);
+
+            System.out.println("Categorie di base inserite!");
         }
 
     }

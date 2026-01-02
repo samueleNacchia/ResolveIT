@@ -96,6 +96,7 @@ public interface TicketService {
     boolean releaseTicket(Long ticketId);
 
 
+    Ticket getTicketById(Long id);
     /**
      * Recupera la lista di tutti i ticket inviati da un determinato cliente.
      * * @param cliente l'oggetto {@link Cliente} di cui si vogliono recuperare i ticket.

@@ -25,21 +25,27 @@ public class TicketImpl implements TicketService{
     @Autowired
     private CategoriaRepository categoriaRepository;
 
+    private final String titolo_regex = "^[a-zA-Z0-9À-ÿ '‘\".,!?-]{5,100}$";
+
 
     @Transactional
     public boolean addTicket(TicketDTO dto, Cliente autore) throws IOException {
         Ticket ticket = new Ticket();
-
         ticket.setTitolo(dto.getTitolo());
-        ticket.setTesto(dto.getDescrizione());
+        ticket.setDescrizione(dto.getDescrizione());
 
         Categoria cat = categoriaRepository.findById(dto.getIdCategoria()).orElse(null);
-        if (cat == null) {
+        if (cat == null || cat.getStato() == false) {
             return false;
         }
         ticket.setCategoria(cat);
 
         if (dto.getFileAllegato() != null && !dto.getFileAllegato().isEmpty()) {
+
+            if (dto.getFileAllegato().getSize() > 16 * 1024 * 1024) {
+                return false;
+            }
+
             String originalName = dto.getFileAllegato().getOriginalFilename();
 
             if (originalName != null) {
@@ -48,10 +54,19 @@ public class TicketImpl implements TicketService{
                         lowerName.endsWith(".jpeg") || lowerName.endsWith(".zip")) {
 
                     ticket.setAllegato(dto.getFileAllegato().getBytes());
+                    ticket.setNomeFile(originalName);
                 } else {
                     return false;
                 }
             }
+        }
+
+        if (dto.getTitolo() == null || !dto.getTitolo().matches(titolo_regex)) {
+            return false;
+        }
+
+        if(dto.getDescrizione().length() > 2000){
+            return false;
         }
 
         ticket.setCliente(autore);
@@ -63,8 +78,13 @@ public class TicketImpl implements TicketService{
         ticket.setDataAnnullamento(null);
         ticket.setDataResolved(null);
 
-        ticketRepository.save(ticket);
-        return true;
+        try {
+            ticketRepository.save(ticket);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 
@@ -136,9 +156,13 @@ public class TicketImpl implements TicketService{
         return true;
     }
 
+    public Ticket getTicketById(Long id) {
+        return ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket non trovato con ID: " + id));
+    }
 
     public List<Ticket> getTicketUtente(Cliente cliente) {
-        return ticketRepository.findByCliente(cliente);
+        return ticketRepository.findByClienteOrderByDataCreazioneDesc(cliente);
     }
 
 

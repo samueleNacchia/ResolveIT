@@ -13,7 +13,7 @@ import java.util.List;
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
-    List<Ticket> findByCliente(Cliente cliente);
+    List<Ticket> findByClienteOrderByDataCreazioneDesc(Cliente cliente);
     List<Ticket> findByOperatore(Operatore operatore);
     List<Ticket> findByStato(Stato stato);
     List<Ticket> findByTitoloContainingIgnoreCase(String parola);

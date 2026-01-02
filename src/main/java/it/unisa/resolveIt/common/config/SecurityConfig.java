@@ -30,6 +30,8 @@ public class SecurityConfig {
                         // Permettiamo solo login, registrazione e risorse statiche
                         .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/error").permitAll()
                         .requestMatchers("/gestore").hasAuthority("GESTORE")
+                        .requestMatchers("/ticket/home", "/ticket/salva", "/ticket/elimina/**").hasAuthority("CLIENTE")
+                        .requestMatchers("/ticket/operatore-home", "/ticket/prendi/**", "/ticket/risolvi/**", "/ticket/rilascia/**").hasAuthority("OPERATORE")
                         .requestMatchers("/home", "/my-profile").hasAnyAuthority("CLIENTE", "OPERATORE")
                         .anyRequest().authenticated()
                 )

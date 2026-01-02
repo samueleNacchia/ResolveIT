@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 
 
 public class TicketDTO {
+
+    private Long id;
+
     @NotBlank(message = "Il titolo è obbligatorio")
     private String titolo;
 
@@ -26,6 +29,14 @@ public class TicketDTO {
         this.descrizione = descrizione;
         this.idCategoria = idCategoria;
         this.fileAllegato = fileAllegato;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitolo() {

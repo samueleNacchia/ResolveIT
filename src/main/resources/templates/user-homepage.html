@@ -45,13 +45,17 @@
 <header th:replace="~{fragments/header :: header-fragment}"></header>
 
 <div th:if="${successMessage}"
-     class="max-w-6xl mx-auto mt-4 p-4 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold"
-     th:text="${successMessage}">
+     id="success-banner"
+     class="flash-message max-w-6xl mx-auto mt-4 p-4 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold shadow-sm transition-opacity duration-500">
+  <i class="fa-solid fa-check-circle mr-2"></i>
+  <span th:text="${successMessage}"></span>
 </div>
 
 <div th:if="${errorMessage}"
-     class="max-w-6xl mx-auto mt-4 p-4 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold"
-     th:text="${errorMessage}">
+     id="error-banner"
+     class="flash-message max-w-6xl mx-auto mt-4 p-4 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold shadow-sm transition-opacity duration-500">
+  <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+  <span th:text="${errorMessage}"></span>
 </div>
 
 <div class="main-container">
@@ -90,9 +94,9 @@
                 <div class="text-[10px] text-gray-400" th:text="${#temporals.format(t.dataCreazione, 'dd/MM/yyyy HH:mm')}">Data</div>
               </td>
               <td class="px-6 py-4">
-                                        <span th:text="${t.stato}" class="badge"
-                                              th:classappend="${t.stato.name() == 'APERTO' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
-                                        </span>
+                   <span th:text="${t.stato}" class="badge"
+                         th:classappend="${t.stato.name() == 'APERTO' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+                   </span>
               </td>
               <td class="px-6 py-4">
                 <button th:if="${t.allegato != null}" th:onclick="'toggleAttachment(' + ${t.ID_T} + ')'" class="text-indigo-600 font-bold text-xs">
@@ -100,8 +104,14 @@
                 </button>
               </td>
               <td class="px-6 py-4 text-right">
-                <form th:action="@{/ticket/elimina/{id}(id=${t.ID_T})}" method="POST" onsubmit="return confirm('Eliminare?')">
-                  <button type="submit" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                <form th:action="@{/ticket/elimina/{id}(id=${t.ID_T})}" method="POST"
+                      th:onsubmit="${t.stato.name() == 'ANNULLATO'} ? 'return false;' : 'return confirm(\'Eliminare?\')'">
+
+                  <button type="submit"
+                          th:class="${t.stato.name() == 'ANNULLATO' || t.stato.name() == 'RISOLTO'} ? 'text-gray-400 cursor-not-allowed' : 'text-red-400 hover:text-red-600'"
+                          th:disabled="${t.stato.name() == 'ANNULLATO' || t.stato.name() == 'RISOLTO'}">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 </form>
               </td>
             </tr>
@@ -139,8 +149,7 @@
           </div>
           <div class="flex justify-between items-center pt-4">
             <div class="relative flex items-center gap-4">
-              <input type="file" th:field="*{fileAllegato}" id="file-hidden" class="hidden" accept=".txt,.jpg,.jpeg,.zip">
-
+              <input type="file" name="fileAllegato" id="file-hidden" class="hidden" accept=".txt,.jpg,.jpeg,.zip">
               <button type="button" onclick="document.getElementById('file-hidden').click()"
                       class="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl text-sm font-bold transition">
                 <i class="fa-solid fa-paperclip mr-2"></i> Allegato
@@ -160,6 +169,7 @@
 </div>
 
 <footer th:replace="~{fragments/footer :: footer-fragment}"></footer>
+
 
 </body>
 </html>

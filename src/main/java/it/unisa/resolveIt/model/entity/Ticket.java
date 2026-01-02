@@ -18,6 +18,10 @@ public class Ticket {
     @Pattern(regexp = "^[a-zA-Z0-9À-ÿ '‘\".,!?-]{5,100}$", message = "Titolo non valido")
     private String titolo;
 
+    @NotBlank
+    @Column(length = 2000)
+    private String descrizione;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
@@ -42,16 +46,16 @@ public class Ticket {
     @Column(columnDefinition = "LONGBLOB")
     private byte[] allegato;
 
-    @NotBlank
-    @Column(length = 2000)
-    private String testo;
+    @Column(name = "nome_file")
+    private String nomeFile;
+
 
     @Enumerated(EnumType.STRING)
     private Stato stato;
 
     public Ticket() {}
 
-    public Ticket(String titolo, Cliente cliente, LocalDateTime dataCreazione, LocalDateTime dataAnnullamento, LocalDateTime dataInCarico, LocalDateTime dataResolved, byte[] allegato, String testo) {
+    public Ticket(String titolo, Cliente cliente, LocalDateTime dataCreazione, LocalDateTime dataAnnullamento, LocalDateTime dataInCarico, LocalDateTime dataResolved, byte[] allegato, String descrizione) {
         this.titolo = titolo;
         this.cliente = cliente;
         this.dataCreazione = dataCreazione;
@@ -59,7 +63,7 @@ public class Ticket {
         this.dataInCarico = dataInCarico;
         this.dataResolved = dataResolved;
         this.allegato = allegato;
-        this.testo = testo;
+        this.descrizione = descrizione;
     }
 
     public Long getID_T() {
@@ -126,14 +130,6 @@ public class Ticket {
         this.allegato = allegato;
     }
 
-    public String getTesto() {
-        return testo;
-    }
-
-    public void setTesto(String testo) {
-        this.testo = testo;
-    }
-
     public Categoria getCategoria() {
         return categoria;
     }
@@ -156,5 +152,21 @@ public class Ticket {
 
     public void setStato(Stato stato) {
         this.stato = stato;
+    }
+
+    public String getDescrizione() {
+        return descrizione;
+    }
+
+    public void setDescrizione(String descrizione) {
+        this.descrizione = descrizione;
+    }
+
+    public String getNomeFile() {
+        return nomeFile;
+    }
+
+    public void setNomeFile(String nomeFile) {
+        this.nomeFile = nomeFile;
     }
 }

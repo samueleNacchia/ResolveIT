@@ -11,7 +11,7 @@
     <link rel="stylesheet" th:href="@{/css/footer.css}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script th:src="@{/js/ticket-actions.js}"></script>
+    <script th:src="@{/js/ticket-actions.js}" defer></script>
 
     <style type="text/tailwindcss">
         @layer components {
@@ -53,11 +53,18 @@
 
 <header th:replace="~{fragments/header :: header-fragment}"></header>
 
-<div th:if="${successMessage}" class="max-w-5xl mx-auto mb-6 p-4 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold text-center animate-bounce">
-    <i class="fa-solid fa-check-circle mr-2"></i> <span th:text="${successMessage}"></span>
+<div th:if="${successMessage}"
+     id="success-banner"
+     class="flash-message max-w-6xl mx-auto mt-4 p-4 bg-green-100 text-green-700 border border-green-200 rounded-xl font-bold shadow-sm transition-opacity duration-500">
+    <i class="fa-solid fa-check-circle mr-2"></i>
+    <span th:text="${successMessage}"></span>
 </div>
-<div th:if="${errorMessage}" class="max-w-5xl mx-auto mb-6 p-4 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold text-center">
-    <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span th:text="${errorMessage}"></span>
+
+<div th:if="${errorMessage}"
+     id="error-banner"
+     class="flash-message max-w-6xl mx-auto mt-4 p-4 bg-red-100 text-red-700 border border-red-200 rounded-xl font-bold shadow-sm transition-opacity duration-500">
+    <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+    <span th:text="${errorMessage}"></span>
 </div>
 <div class="main-container">
     <aside class="sidebar">
@@ -99,20 +106,33 @@
                             </td>
                             <td class="px-6 py-4 text-slate-500 font-medium" th:text="'#' + ${t.ID_T}">ID</td>
                             <td class="px-6 py-4 text-slate-700 font-medium" th:text="${t.titolo}">Titolo</td>
-                            <td class="px-6 py-4 text-slate-600" th:text="${t.categoria}">Categoria</td>
-                            <td class="px-6 py-4 text-slate-600" th:text="${t.dataCreazione}">Data</td>
+                            <td class="px-6 py-4 text-slate-600" th:text="${t.categoria.nome}">Categoria</td>
+                            <td class="px-6 py-4 text-slate-600"
+                                th:text="${#temporals.format(t.dataCreazione, 'dd/MM/yyyy HH:mm')}">
+                            </td>
                             <td class="px-6 py-4 flex justify-center gap-2">
-                                <button type="button"
-                                        th:onclick="'confirmAction(' + ${t.ID_T} + ', \'rilascia\')'"
-                                        class="text-red-400 hover:text-red-600 transition-colors">
+                                <button th:if="${t.stato.name() == 'IN_CORSO'}"
+                                        type="button"
+                                        th:onclick="|confirmAction('${t.ID_T}', 'rilascia')|"
+                                        class="text-red-400 hover:text-red-600 transition-colors"
+                                        title="Rilascia Ticket">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
 
-                                <button type="button"
-                                        th:onclick="'confirmAction(' + ${t.ID_T} + ', \'risolvi\')'"
-                                        class="text-green-500 hover:text-green-700 transition-colors">
+                                <button th:if="${t.stato.name() == 'IN_CORSO'}"
+                                        type="button"
+                                        th:onclick="|confirmAction('${t.ID_T}', 'risolvi')|"
+                                        class="text-green-500 hover:text-green-700 transition-colors"
+                                        title="Segna come Risolto">
                                     <i class="fa-solid fa-check-circle"></i>
                                 </button>
+
+                                <span th:if="${t.stato.name() == 'RISOLTO'}" class="text-xs text-gray-400 italic">
+                                    Completato
+                                </span>
+                                <span th:if="${t.stato.name() == 'ANNULLATO'}" class="text-xs text-gray-400 italic">
+                                    Annullato
+                                </span>
                             </td>
                         </tr>
                         <tr th:id="'detail-work-' + ${t.ID_T}" class="hidden bg-gray-50/30">
@@ -121,9 +141,10 @@
                                     <p class="text-sm"><strong>Descrizione:</strong><br>
                                         <span class="text-slate-600" th:text="${t.descrizione}">Dettagli del problema...</span></p>
                                     <div th:if="${t.allegato != null}" class="text-sm">
-                                        <strong>Allegati:</strong><br>
-                                        <a href="#" class="text-blue-500 hover:underline flex items-center gap-2 mt-1">
-                                            <i class="fa-solid fa-paperclip"></i> <span th:text="${t.allegato}">file</span>
+                                        <strong>Allegato:</strong><br>
+                                        <a th:href="@{/ticket/download/{id}(id=${t.ID_T})}"
+                                           class="text-blue-500 hover:underline flex items-center gap-2 mt-1">
+                                            <i class="fa-solid fa-download"></i> Scarica Allegato
                                         </a>
                                     </div>
                                 </div>
@@ -156,11 +177,13 @@
                             </td>
                             <td class="px-6 py-4 text-slate-500 font-medium" th:text="'#' + ${t.ID_T}">ID</td>
                             <td class="px-6 py-4 text-slate-700 font-medium" th:text="${t.titolo}">Titolo</td>
-                            <td class="px-6 py-4 text-slate-600" th:text="${t.categoria}">Categoria</td>
-                            <td class="px-6 py-4 text-slate-600" th:text="${t.dataCreazione}">Data</td>
+                            <td class="px-6 py-4 text-slate-600" th:text="${t.categoria.nome}">Categoria</td>
+                            <td class="px-6 py-4 text-slate-600"
+                                th:text="${#temporals.format(t.dataCreazione, 'dd/MM/yyyy HH:mm')}">
+                            </td>
                             <td class="px-6 py-4 text-center">
                                 <button type="button"
-                                        th:onclick="'confirmAction(' + ${t.ID_T} + ', \'assegna\')'"
+                                        th:onclick="|confirmAction('${t.ID_T}', 'prendi')|"
                                         class="text-green-500 hover:text-green-700 transition-colors">
                                     <i class="fa-solid fa-check-circle"></i>
                                 </button>
