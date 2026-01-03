@@ -102,18 +102,18 @@
                     <th:block th:each="t : ${listaLavoro}">
                         <tr class="row-main">
                             <td class="px-6 py-4">
-                                <button th:onclick="'toggleRow(\'work-\' + ' + ${t.ID_T} + ')'" th:id="'btn-work-' + ${t.ID_T}" class="toggle-btn toggle-plus">+</button>
+                                <button th:onclick="'toggleRow(\'work-\' + ' + ${t.id} + ')'" th:id="'btn-work-' + ${t.id}" class="toggle-btn toggle-plus">+</button>
                             </td>
-                            <td class="px-6 py-4 text-slate-500 font-medium" th:text="'#' + ${t.ID_T}">ID</td>
+                            <td class="px-6 py-4 text-slate-500 font-medium" th:text="'#' + ${t.id}">ID</td>
                             <td class="px-6 py-4 text-slate-700 font-medium" th:text="${t.titolo}">Titolo</td>
-                            <td class="px-6 py-4 text-slate-600" th:text="${t.categoria.nome}">Categoria</td>
+                            <td class="px-6 py-4 text-slate-600" th:text="${t.nomeCategoria}">Categoria</td>
                             <td class="px-6 py-4 text-slate-600"
                                 th:text="${#temporals.format(t.dataCreazione, 'dd/MM/yyyy HH:mm')}">
                             </td>
                             <td class="px-6 py-4 flex justify-center gap-2">
                                 <button th:if="${t.stato.name() == 'IN_CORSO'}"
                                         type="button"
-                                        th:onclick="|confirmAction('${t.ID_T}', 'rilascia')|"
+                                        th:onclick="|confirmAction('${t.id}', 'rilascia')|"
                                         class="text-red-400 hover:text-red-600 transition-colors"
                                         title="Rilascia Ticket">
                                     <i class="fa-solid fa-trash"></i>
@@ -121,7 +121,7 @@
 
                                 <button th:if="${t.stato.name() == 'IN_CORSO'}"
                                         type="button"
-                                        th:onclick="|confirmAction('${t.ID_T}', 'risolvi')|"
+                                        th:onclick="|confirmAction('${t.id}', 'risolvi')|"
                                         class="text-green-500 hover:text-green-700 transition-colors"
                                         title="Segna come Risolto">
                                     <i class="fa-solid fa-check-circle"></i>
@@ -135,16 +135,15 @@
                                 </span>
                             </td>
                         </tr>
-                        <tr th:id="'detail-work-' + ${t.ID_T}" class="hidden bg-gray-50/30">
+                        <tr th:id="'detail-work-' + ${t.id}" class="hidden bg-gray-50/30">
                             <td colspan="6" class="px-20 py-6 border-b border-gray-100">
                                 <div class="space-y-3">
                                     <p class="text-sm"><strong>Descrizione:</strong><br>
                                         <span class="text-slate-600" th:text="${t.descrizione}">Dettagli del problema...</span></p>
-                                    <div th:if="${t.allegato != null}" class="text-sm">
+                                    <div th:if="${t.nomeFile != null}" class="text-sm">
                                         <strong>Allegato:</strong><br>
-                                        <a th:href="@{/ticket/download/{id}(id=${t.ID_T})}"
-                                           class="text-blue-500 hover:underline flex items-center gap-2 mt-1">
-                                            <i class="fa-solid fa-download"></i> Scarica Allegato
+                                        <a th:href="@{/ticket/download/{id}(id=${t.id})}" class="text-blue-500 hover:underline">
+                                            <i class="fa-solid fa-download"></i> Scarica <span th:text="${t.nomeFile}"></span>
                                         </a>
                                     </div>
                                 </div>
@@ -173,23 +172,23 @@
                     <th:block th:each="t : ${listaAttesa}">
                         <tr class="row-main">
                             <td class="px-6 py-4">
-                                <button th:onclick="'toggleRow(\'assign-\' + ' + ${t.ID_T} + ')'" th:id="'btn-assign-' + ${t.ID_T}" class="toggle-btn toggle-plus">+</button>
+                                <button th:onclick="'toggleRow(\'assign-\' + ' + ${t.id} + ')'" th:id="'btn-assign-' + ${t.id}" class="toggle-btn toggle-plus">+</button>
                             </td>
-                            <td class="px-6 py-4 text-slate-500 font-medium" th:text="'#' + ${t.ID_T}">ID</td>
+                            <td class="px-6 py-4 text-slate-500 font-medium" th:text="'#' + ${t.id}">ID</td>
                             <td class="px-6 py-4 text-slate-700 font-medium" th:text="${t.titolo}">Titolo</td>
-                            <td class="px-6 py-4 text-slate-600" th:text="${t.categoria.nome}">Categoria</td>
+                            <td class="px-6 py-4 text-slate-600" th:text="${t.nomeCategoria}">Categoria</td>
                             <td class="px-6 py-4 text-slate-600"
                                 th:text="${#temporals.format(t.dataCreazione, 'dd/MM/yyyy HH:mm')}">
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <button type="button"
-                                        th:onclick="|confirmAction('${t.ID_T}', 'prendi')|"
+                                        th:onclick="|confirmAction('${t.id}', 'prendi')|"
                                         class="text-green-500 hover:text-green-700 transition-colors">
                                     <i class="fa-solid fa-check-circle"></i>
                                 </button>
                             </td>
                         </tr>
-                        <tr th:id="'detail-assign-' + ${t.ID_T}" class="hidden bg-gray-50/30">
+                        <tr th:id="'detail-assign-' + ${t.id}" class="hidden bg-gray-50/30">
                             <td colspan="6" class="px-20 py-6 border-b border-gray-100">
                                 <div class="space-y-2">
                                     <p class="text-sm"><strong>Descrizione:</strong><br>

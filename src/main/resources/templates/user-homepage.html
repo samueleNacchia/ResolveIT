@@ -36,6 +36,37 @@
 
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* Container principale della barra filtri */
+        .filter-bar {
+            @apply flex flex-wrap items-center gap-8 mb-6 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm;
+        }
+
+        /* Gruppo di bottoni (Stato o Data) */
+        .btn-group {
+            @apply flex items-center gap-2;
+        }
+
+        /* Etichette "Stato:" e "Data:" */
+        .filter-label {
+            @apply text-xs font-bold text-gray-400 uppercase tracking-wider mr-2;
+        }
+
+        /* Stile base dei bottoni (che sono link <a>) */
+        .btn {
+            @apply px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200
+                   border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300;
+        }
+
+        /* Stile del bottone quando è attivo (filtro selezionato) */
+        .btn.active {
+            @apply bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100;
+        }
+
+        /* Effetto al passaggio del mouse sui bottoni non attivi */
+        .btn:not(.active):hover {
+            @apply transform scale-105;
+        }
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
@@ -76,6 +107,32 @@
   <main class="content-area">
 
     <div id="tab-my-tickets" class="tab-content active">
+
+      <div class="filter-bar">
+
+        <div class="btn-group">
+          <span class="filter-label">Stato:</span>
+          <a th:href="@{/ticket/home(ordine=${ordineSelezionato})}"
+             th:class="${statoSelezionato == null ? 'btn active' : 'btn'}">Tutti</a>
+
+          <a th:href="@{/ticket/home(stato='APERTO', ordine=${ordineSelezionato})}"
+             th:class="${statoSelezionato != null and statoSelezionato.name() == 'APERTO' ? 'btn active' : 'btn'}">Aperti</a>
+
+          <a th:href="@{/ticket/home(stato='IN_CORSO', ordine=${ordineSelezionato})}"
+             th:class="${statoSelezionato != null and statoSelezionato.name() == 'IN_CORSO' ? 'btn active' : 'btn'}">In Corso</a>
+        </div>
+
+        <div class="btn-group">
+          <span class="filter-label">Data:</span>
+          <a th:href="@{/ticket/home(stato=${statoSelezionato}, ordine='desc')}"
+             th:class="${ordineSelezionato == 'desc' ? 'btn active' : 'btn'}">Più recenti ↑</a>
+          <a th:href="@{/ticket/home(stato=${statoSelezionato}, ordine='asc')}"
+             th:class="${ordineSelezionato == 'asc' ? 'btn active' : 'btn'}">Meno recenti ↓</a>
+        </div>
+
+      </div>
+
+
       <div class="card-dashboard">
         <table class="w-full text-left">
           <thead class="table-head">
@@ -94,19 +151,26 @@
                 <div class="text-[10px] text-gray-400" th:text="${#temporals.format(t.dataCreazione, 'dd/MM/yyyy HH:mm')}">Data</div>
               </td>
               <td class="px-6 py-4">
-                   <span th:text="${t.stato}" class="badge"
-                         th:classappend="${t.stato.name() == 'APERTO' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
-                   </span>
+              <span th:text="${t.stato}"
+                    class="badge"
+                    th:classappend="${
+                      t.stato.name() == 'APERTO' ? 'bg-green-100 text-green-700' :
+                      (t.stato.name() == 'IN_CORSO' ? 'bg-blue-100 text-blue-700' :
+                      (t.stato.name() == 'RISOLTO' ? 'bg-gray-100 text-gray-600' :
+                      'bg-red-100 text-red-700'))}">
+              </span>
               </td>
               <td class="px-6 py-4">
-                <button th:if="${t.allegato != null}" th:onclick="'toggleAttachment(' + ${t.ID_T} + ')'" class="text-indigo-600 font-bold text-xs">
+                <button th:if="${t.nomeFile != null}"
+                        th:onclick="'toggleAttachment(' + ${t.id} + ')'"
+                        class="text-indigo-600 font-bold text-xs">
                   <i class="fa-solid fa-paperclip"></i> Vedi
                 </button>
+                <span th:unless="${t.nomeFile != null}" class="text-gray-300 text-xs">-</span>
               </td>
               <td class="px-6 py-4 text-right">
-                <form th:action="@{/ticket/elimina/{id}(id=${t.ID_T})}" method="POST"
+                <form th:action="@{/ticket/elimina/{id}(id=${t.id})}" method="POST"
                       th:onsubmit="${t.stato.name() == 'ANNULLATO'} ? 'return false;' : 'return confirm(\'Eliminare?\')'">
-
                   <button type="submit"
                           th:class="${t.stato.name() == 'ANNULLATO' || t.stato.name() == 'RISOLTO'} ? 'text-gray-400 cursor-not-allowed' : 'text-red-400 hover:text-red-600'"
                           th:disabled="${t.stato.name() == 'ANNULLATO' || t.stato.name() == 'RISOLTO'}">
@@ -115,12 +179,12 @@
                 </form>
               </td>
             </tr>
-            <tr th:id="'attachment-row-' + ${t.ID_T}" class="tab-content row-details">
+            <tr th:id="'attachment-row-' + ${t.id}" class="hidden row-details">
               <td colspan="4" class="px-8 py-4">
                 <div class="flex items-center gap-3 text-xs text-gray-600">
                   <i class="fa-solid fa-file-zipper"></i>
                   <span>Documento caricato</span>
-                  <a th:href="@{/ticket/download/{id}(id=${t.ID_T})}" class="text-indigo-600 underline">Scarica</a>
+                  <a th:href="@{/ticket/download/{id}(id=${t.id})}" class="text-indigo-600 underline">Scarica</a>
                 </div>
               </td>
             </tr>

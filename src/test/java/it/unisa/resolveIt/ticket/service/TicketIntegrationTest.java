@@ -161,4 +161,5 @@ public class TicketIntegrationTest {
                 .andExpect(redirectedUrl("/ticket/home"))
                 .andExpect(flash().attributeExists("errorMessage"));
     }
+
 }

@@ -3,6 +3,7 @@ package it.unisa.resolveIt.ticket.service;
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.entity.Operatore;
 import it.unisa.resolveIt.model.entity.Ticket;
+import it.unisa.resolveIt.model.enums.Stato;
 import it.unisa.resolveIt.ticket.dto.TicketDTO;
 
 import java.io.IOException;
@@ -97,6 +98,8 @@ public interface TicketService {
 
 
     Ticket getTicketById(Long id);
+
+
     /**
      * Recupera la lista di tutti i ticket inviati da un determinato cliente.
      * * @param cliente l'oggetto {@link Cliente} di cui si vogliono recuperare i ticket.
@@ -104,7 +107,7 @@ public interface TicketService {
      * @return una {@link List} di {@link Ticket} appartenenti al cliente; lista vuota se non ci sono ticket.
      * Post-condizione: ogni ticket nella lista restituita deve avere l'attributo cliente uguale al parametro fornito.
      */
-    List<Ticket> getTicketUtente(Cliente cliente);
+    List<TicketDTO> getTicketUtente(Cliente cliente);
 
 
 
@@ -114,7 +117,7 @@ public interface TicketService {
      * * @return una {@link List} di {@link Ticket} il cui stato è {@code Stato.APERTO}.
      * Post-condizione: tutti i ticket restituiti devono avere {@code stato = "aperto"}.
      */
-    List<Ticket> getTicketDisponibili();
+    List<TicketDTO> getTicketDisponibili();
 
 
 
@@ -125,5 +128,8 @@ public interface TicketService {
      * @return una {@link List} di {@link Ticket} assegnati all'operatore.
      * Post-condizione: ogni ticket nella lista deve avere l'operatore assegnato uguale al parametro e stato "IN_CORSO".
      */
-    List<Ticket> getTicketInCarico(Operatore operatore);
+    List<TicketDTO> getTicketInCarico(Operatore operatore);
+
+
+    List<TicketDTO> getTicketUtenteFiltrati(Cliente cliente, Stato stato, String ordine);
 }

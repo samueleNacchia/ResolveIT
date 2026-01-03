@@ -34,7 +34,6 @@ public class Ticket {
     @JoinColumn(name = "operatore_id")
     private Operatore operatore;
 
-
     @Column(updatable = false, nullable = false)
     private LocalDateTime dataCreazione;
 

@@ -3,6 +3,7 @@ package it.unisa.resolveIt.ticket.control;
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.entity.Operatore;
 import it.unisa.resolveIt.model.entity.Ticket;
+import it.unisa.resolveIt.model.enums.Stato;
 import it.unisa.resolveIt.model.repository.CategoriaRepository;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
@@ -22,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/ticket")
@@ -41,12 +43,51 @@ public class TicketController {
 
     @PreAuthorize("hasAuthority('CLIENTE')")
     @GetMapping("/home")
-    public String userHome(Model model, Principal principal) {
+    public String userHome(@RequestParam(required = false) Stato stato,
+                           @RequestParam(required = false, defaultValue = "desc") String ordine,
+                           Model model, Principal principal) {
         Cliente cliente = clienteRepository.findByEmail(principal.getName());
-        model.addAttribute("lista", ticketService.getTicketUtente(cliente));
+
+        List<TicketDTO> tickets = ticketService.getTicketUtenteFiltrati(cliente, stato, ordine);
+
+        model.addAttribute("lista", tickets);
         model.addAttribute("ticketDTO", new TicketDTO());
         model.addAttribute("categorie", categoriaRepository.findAll());
+
+        // AGGIUNTO PER L'HTML
+        model.addAttribute("statoSelezionato", stato);
+        model.addAttribute("ordineSelezionato", ordine);
+
         return "user-homepage";
+    }
+
+    @PreAuthorize("hasAuthority('CLIENTE')")
+    @PostMapping("/salva")
+    public String salvaTicket(@Valid @ModelAttribute("ticketDTO") TicketDTO ticketDTO,
+                              BindingResult result,
+                              Principal principal,
+                              Model model, RedirectAttributes redirectAttributes) throws IOException {
+
+        if (result.hasErrors()) {
+            Cliente cliente = clienteRepository.findByEmail(principal.getName());
+            // DEVI RICARICARE I DATI FILTRATI ANCHE QUI
+            model.addAttribute("lista", ticketService.getTicketUtente(cliente));
+            model.addAttribute("categorie", categoriaRepository.findAll());
+            // Aggiungi parametri di default per non rompere i bottoni nell'header
+            model.addAttribute("ordineSelezionato", "desc");
+            return "user-homepage";
+        }
+
+        Cliente cliente = clienteRepository.findByEmail(principal.getName());
+        boolean success = ticketService.addTicket(ticketDTO, cliente);
+
+        if (success) {
+            redirectAttributes.addFlashAttribute("successMessage", "Ticket creato con successo!");
+            return "redirect:/ticket/home";
+        } else {
+            redirectAttributes.addFlashAttribute("errorMessage", "Errore: formato o dimensione file non validi.");
+            return "redirect:/ticket/home";
+        }
     }
 
     @PreAuthorize("hasAuthority('OPERATORE')")
@@ -60,30 +101,6 @@ public class TicketController {
         return "operatore-homepage";
     }
 
-    @PreAuthorize("hasAuthority('CLIENTE')")
-    @PostMapping("/salva")
-    public String salvaTicket(@Valid @ModelAttribute("ticketDTO") TicketDTO ticketDTO,
-                              BindingResult result,
-                              Principal principal,
-                              Model model, RedirectAttributes redirectAttributes) throws IOException {
-        if (result.hasErrors()) {
-            result.getAllErrors().forEach(err -> System.out.println("ERRORE VALIDAZIONE: " + err.getDefaultMessage()));
-            model.addAttribute("categorie", categoriaRepository.findAll());
-            return "user-homepage";
-        }
-        Cliente cliente = clienteRepository.findByEmail(principal.getName());
-
-
-        boolean success = ticketService.addTicket(ticketDTO, cliente);
-
-        if (success) {
-            redirectAttributes.addFlashAttribute("successMessage", "Ticket creato con successo!");
-            return "redirect:/ticket/home";
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Errore: formato allegato non supportato o dati mancanti.");
-            return "redirect:/ticket/home";
-        }
-    }
 
     @PreAuthorize("hasAuthority('CLIENTE')")
     @PostMapping("/elimina/{id}")
@@ -151,9 +168,13 @@ public class TicketController {
 
     @GetMapping("/download/{id}")
     public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+
         Ticket t = ticketService.getTicketById(id);
 
-        // Ora usiamo il nome reale recuperato dal DB!
+        if (t.getAllegato() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
         String nome = (t.getNomeFile() != null) ? t.getNomeFile() : "allegato.dat";
 
         return ResponseEntity.ok()
@@ -161,4 +182,6 @@ public class TicketController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(t.getAllegato());
     }
+
+
 }

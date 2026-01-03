@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TicketImpl implements TicketService{
@@ -27,6 +28,20 @@ public class TicketImpl implements TicketService{
 
     private final String titolo_regex = "^[a-zA-Z0-9À-ÿ '‘\".,!?-]{5,100}$";
 
+
+    private TicketDTO convertToDTO(Ticket t) {
+        TicketDTO dto = new TicketDTO();
+        dto.setId(t.getID_T());
+        dto.setTitolo(t.getTitolo());
+        dto.setDescrizione(t.getDescrizione());
+        dto.setStato(t.getStato());
+        dto.setDataCreazione(t.getDataCreazione());
+        dto.setNomeFile(t.getNomeFile());
+        if (t.getCategoria() != null) {
+            dto.setNomeCategoria(t.getCategoria().getNome());
+        }
+        return dto;
+    }
 
     @Transactional
     public boolean addTicket(TicketDTO dto, Cliente autore) throws IOException {
@@ -158,21 +173,31 @@ public class TicketImpl implements TicketService{
 
     public Ticket getTicketById(Long id) {
         return ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket non trovato con ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Ticket non trovato"));
     }
 
-    public List<Ticket> getTicketUtente(Cliente cliente) {
-        return ticketRepository.findByClienteOrderByDataCreazioneDesc(cliente);
-    }
-
-
-    public List<Ticket> getTicketDisponibili() {
-        return ticketRepository.findByStato(Stato.APERTO);
+    public List<TicketDTO> getTicketUtente(Cliente cliente) {
+        return ticketRepository.findByClienteOrderByDataCreazioneDesc(cliente).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
 
-    public List<Ticket> getTicketInCarico(Operatore operatore) {
-        return ticketRepository.findByOperatore(operatore);
+    public List<TicketDTO> getTicketDisponibili() {
+        return ticketRepository.findByStato(Stato.APERTO).stream().map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
+
+    public List<TicketDTO> getTicketInCarico(Operatore operatore) {
+        return ticketRepository.findByOperatore(operatore).stream().map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TicketDTO> getTicketUtenteFiltrati(Cliente cliente, Stato stato, String ordine) {
+        return ticketRepository.findByClienteAndOptionalStato(cliente, stato, ordine).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 }

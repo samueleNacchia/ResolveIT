@@ -1,34 +1,35 @@
 package it.unisa.resolveIt.ticket.dto;
 
+import it.unisa.resolveIt.model.enums.Stato;
 import org.springframework.web.multipart.MultipartFile;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 
 public class TicketDTO {
 
     private Long id;
-
-    @NotBlank(message = "Il titolo è obbligatorio")
     private String titolo;
-
-    @NotBlank(message = "La descrizione è obbligatoria")
     private String descrizione;
-
-    @NotNull(message = "Seleziona una categoria")
     private Long idCategoria;
-
-    // Campo per il file fisico proveniente dal form
     private MultipartFile fileAllegato;
+    private String nomeFile;
+    private Stato stato;
+    private LocalDateTime dataCreazione;
+    private String nomeCategoria;
 
     public TicketDTO() {
     }
 
-    public TicketDTO(String titolo, String descrizione, Long idCategoria, MultipartFile fileAllegato) {
+    public TicketDTO(Long id, String titolo, String descrizione, Long idCategoria, MultipartFile fileAllegato, String nomeFile, Stato stato, LocalDateTime dataCreazione, String nomeCategoria) {
+        this.id = id;
         this.titolo = titolo;
         this.descrizione = descrizione;
         this.idCategoria = idCategoria;
         this.fileAllegato = fileAllegato;
+        this.nomeFile = nomeFile;
+        this.stato = stato;
+        this.dataCreazione = dataCreazione;
+        this.nomeCategoria = nomeCategoria;
     }
 
     public Long getId() {
@@ -69,5 +70,37 @@ public class TicketDTO {
 
     public void setFileAllegato(MultipartFile fileAllegato) {
         this.fileAllegato = fileAllegato;
+    }
+
+    public Stato getStato() {
+        return stato;
+    }
+
+    public void setStato(Stato stato) {
+        this.stato = stato;
+    }
+
+    public LocalDateTime getDataCreazione() {
+        return dataCreazione;
+    }
+
+    public void setDataCreazione(LocalDateTime dataCreazione) {
+        this.dataCreazione = dataCreazione;
+    }
+
+    public String getNomeCategoria() {
+        return nomeCategoria;
+    }
+
+    public void setNomeCategoria(String nomeCategoria) {
+        this.nomeCategoria = nomeCategoria;
+    }
+
+    public String getNomeFile() {
+        return nomeFile;
+    }
+
+    public void setNomeFile(String nomeFile) {
+        this.nomeFile = nomeFile;
     }
 }

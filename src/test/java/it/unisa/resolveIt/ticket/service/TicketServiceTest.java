@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +36,27 @@ class TicketServiceTest {
     private TicketImpl ticketService;
 
     private final String titolo_regex = "^[a-zA-Z0-9À-ÿ '‘\".,!?-]{5,100}";
+
+
+    @Test
+    void quandoSalvoTicket_alloraVieneConvertitoCorrettamente() throws IOException {
+        TicketDTO dto = new TicketDTO();
+        dto.setTitolo("Problema Connessione");
+        dto.setIdCategoria(1L);
+        dto.setDescrizione("Internet non funziona");
+
+        Cliente autore = new Cliente();
+        autore.setEmail("test@user.it");
+
+        Categoria cat = new Categoria();
+        cat.setStato(true);
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(cat));
+
+        boolean risultato = ticketService.addTicket(dto, autore);
+
+        assertTrue(risultato);
+        verify(ticketRepository).save(any(Ticket.class));
+    }
 
     @Test
     void addTicket_Successo() throws IOException {
@@ -56,6 +78,26 @@ class TicketServiceTest {
         assertTrue(result);
         verify(ticketRepository, times(1)).save(any(Ticket.class));
     }
+
+
+    @Test
+    void addTicket_SenzaAllegato_Successo() throws IOException {
+        TicketDTO dto = new TicketDTO();
+        dto.setIdCategoria(1L);
+        dto.setTitolo("Titolo Valido");
+        dto.setDescrizione("Descrizione valida");
+        dto.setFileAllegato(null); // Caso comune: l'utente non carica nulla
+
+        Categoria cat = new Categoria();
+        cat.enable();
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(cat));
+
+        boolean result = ticketService.addTicket(dto, new Cliente());
+
+        assertTrue(result, "Il service dovrebbe permettere l'invio senza allegato");
+        verify(ticketRepository).save(any(Ticket.class));
+    }
+
 
     @Test
     void addTicket_FormatoAllegatoNonValido() throws IOException {
@@ -508,15 +550,35 @@ class TicketServiceTest {
     @Test
     void getTicketUtente_Successo() {
         Cliente c = new Cliente();
-        ticketService.getTicketUtente(c);
-        verify(ticketRepository).findByClienteOrderByDataCreazioneDesc(c);
+        Ticket ticket = new Ticket();
+        ticket.setID_T(1L);
+        ticket.setTitolo("Test DTO");
+        ticket.setStato(Stato.APERTO);
+        when(ticketRepository.findByClienteOrderByDataCreazioneDesc(c)).thenReturn(java.util.List.of(ticket));
+
+        List<TicketDTO> risultato = ticketService.getTicketUtente(c);
+
+        assertNotNull(risultato);
+        assertEquals(1, risultato.size());
+        assertEquals("Test DTO", risultato.get(0).getTitolo());
+        assertEquals(1L, risultato.get(0).getId()); // Verifica mapping ID_T -> id
     }
 
 
     @Test
     void getTicketInCarico_Successo() {
         Operatore op = new Operatore();
-        ticketService.getTicketInCarico(op);
+        Ticket ticket = new Ticket();
+        ticket.setID_T(5L);
+        ticket.setTitolo("Ticket Operatore");
+
+        when(ticketRepository.findByOperatore(op)).thenReturn(List.of(ticket));
+
+        List<TicketDTO> risultato = ticketService.getTicketInCarico(op);
+
+        assertNotNull(risultato);
+        assertEquals(1, risultato.size());
+        assertEquals(5L, risultato.get(0).getId());
         verify(ticketRepository).findByOperatore(op);
     }
 }

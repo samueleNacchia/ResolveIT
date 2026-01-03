@@ -35,8 +35,10 @@ function toggleRow(id) {
 
 function toggleAttachment(id) {
     const row = document.getElementById('attachment-row-' + id);
+
     if (row) {
         row.classList.toggle('hidden');
+        row.style.display = row.classList.contains('hidden') ? 'none' : 'table-row';
     }
 }
 
