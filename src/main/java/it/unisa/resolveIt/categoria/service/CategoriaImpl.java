@@ -18,12 +18,17 @@ public class CategoriaImpl implements  CategoriaService{
     public void disableCategoria(long id) {
         Optional<Categoria> esistente = categoriaRepository.findById(id);
         if (esistente.isPresent()) {
-            if(esistente.get().disable())
-            {   categoriaRepository.save(esistente.get()); }
-            throw new RuntimeException("Categoria già disabilitata");
-        }
-        else
+            // CORREZIONE: Se la disabilitazione ha successo, salvo.
+            if (esistente.get().disable()) {
+                categoriaRepository.save(esistente.get());
+            } else {
+                // ALTRIMENTI (else), se era già disabilitata, lancio l'errore.
+                // Senza questo 'else', l'errore veniva lanciato sempre, annullando il salvataggio!
+                throw new RuntimeException("Categoria già disabilitata");
+            }
+        } else {
             throw new RuntimeException("Categoria non trovata per la disattivazione");
+        }
     }
 
     @Transactional
@@ -31,23 +36,26 @@ public class CategoriaImpl implements  CategoriaService{
         Optional<Categoria> esistente = categoriaRepository.findById(id);
 
         if (esistente.isPresent()) {
-            if(esistente.get().enable())
-            {   categoriaRepository.save(esistente.get()); }
-            throw new RuntimeException("Categoria già abilitata");
-        }
-        else
+            // CORREZIONE: Aggiunto else anche qui
+            if (esistente.get().enable()) {
+                categoriaRepository.save(esistente.get());
+            } else {
+                throw new RuntimeException("Categoria già abilitata");
+            }
+        } else {
             throw new RuntimeException("Categoria non trovata per l'aggiornamento");
+        }
     }
 
 
     @Transactional
     public void addCategoria(Categoria categoria) {
+        // Nota: uso getID_C() perché hai confermato che l'entità usa ID_C
         if (categoriaRepository.existsById(categoria.getID_C()) || (categoriaRepository.findByNome(categoria.getNome()) != null))
             throw new RuntimeException("Categoria già presente nel database");
         else
             categoriaRepository.save(categoria);
     }
-
 
     @Transactional
     public void updateCategoria(Categoria categoria) {

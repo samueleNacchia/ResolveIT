@@ -1,0 +1,192 @@
+/* =========================================
+   1. RESET E LAYOUT PRINCIPALE (STICKY FOOTER)
+   ========================================= */
+
+/* Rimuove margini e padding da TUTTO per evitare spazi bianchi indesiderati */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    /* Il body diventa un contenitore flessibile verticale */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Occupa ALMENO tutta l'altezza dello schermo */
+    font-family: 'Roboto', sans-serif;
+    background-color: #ffffff;
+    overflow-x: hidden; /* Blocca lo scroll orizzontale */
+}
+
+/* =========================================
+   2. HEADER & FOOTER (Gestione Flex)
+   ========================================= */
+
+/* Assicuriamo che header e footer non si rimpiccioliscano */
+header, footer, .top-header, .app-footer {
+    flex-shrink: 0;
+}
+
+/* Footer specifico */
+footer {
+    background-color: #f8f9fa; /* Colore sfondo footer */
+    border-top: 1px solid #e0e0e0;
+    width: 100%;
+    margin-top: auto; /* Spinge il footer in basso se c'è spazio */
+}
+
+/* =========================================
+   3. APP CONTAINER (Il cuore del layout)
+   ========================================= */
+
+/* Questo div deve espandersi per riempire TUTTO lo spazio vuoto tra header e footer */
+.app-container {
+    display: flex; /* Dispone Sidebar e Main Content affiancati */
+    flex: 1;       /* MAGIA: Occupa tutto lo spazio verticale rimanente */
+    width: 100%;
+    position: relative;
+    height: 100%;  /* Forza l'altezza a riempire il genitore (body) */
+}
+
+/* =========================================
+   4. SIDEBAR (Colonna Sinistra)
+   ========================================= */
+.sidebar {
+    width: 260px;
+    background-color: #f8f9fa; /* Grigio chiaro */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e0e0e0;
+
+    /* Impedisce alla sidebar di restringersi */
+    flex-shrink: 0;
+
+    /* Assicura che la sidebar sia alta quanto il contenitore */
+    min-height: 100%;
+}
+
+.logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
+.nav-links { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
+
+.nav-item {
+    display: flex; justify-content: space-between; align-items: center;
+    text-decoration: none; color: #333; padding: 12px 15px;
+    border-radius: 8px; transition: 0.3s; font-weight: 500; cursor: pointer;
+}
+
+.nav-item:hover { background-color: #e3f2fd; color: #0044cc; }
+.nav-item i { color: #666; }
+.nav-item:hover i { color: #0044cc; }
+
+/* =========================================
+   5. MAIN CONTENT (Area Destra)
+   ========================================= */
+.main-content {
+    flex-grow: 1; /* Occupa tutta la larghezza rimanente */
+    display: flex;
+    flex-direction: column;
+    padding: 30px 40px;
+    background-color: white;
+}
+
+/* Header Utente (in alto a destra) */
+.top-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+    height: 50px;
+}
+
+.user-profile { display: flex; align-items: center; gap: 10px; }
+.avatar {
+    width: 40px; height: 40px; background-color: #00c853; color: white;
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+    font-weight: bold; font-size: 16px;
+}
+
+/* =========================================
+   6. CONTENUTO DINAMICO (Viste)
+   ========================================= */
+#dynamic-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.hidden-section { display: none; }
+.active-section { display: block; animation: fadeIn 0.3s ease-in; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* HOME VIEW (Centratura) */
+.centered-view {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centra Verticalmente */
+    align-items: center;     /* Centra Orizzontalmente */
+    text-align: center;
+    height: 100%;            /* Importante per centrare verticalmente nello spazio disponibile */
+    width: 100%;
+}
+
+.welcome-text h1 {
+    font-size: 2.8rem; line-height: 1.2; color: #2c3e50;
+    margin-bottom: 2rem; font-weight: 800;
+}
+
+.welcome-image img {
+    max-width: 450px; width: 100%; height: auto;
+}
+
+/* =========================================
+   7. STILI TABELLE E FORM (Invariati ma inclusi)
+   ========================================= */
+.section-title { display: flex; align-items: center; margin-bottom: 20px; }
+.section-title h2 { font-size: 1.8rem; color: #333; font-weight: 500; }
+.mt-large { margin-top: 50px; }
+.add-btn { color: #2b4eff; font-size: 1.8rem; margin-left: 15px; cursor: pointer; transition: transform 0.2s; }
+.add-btn:hover { transform: scale(1.1); color: #00c853; }
+
+.data-table {
+    width: 100%; border-collapse: collapse; background-color: white;
+    border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.data-table th, .data-table td { padding: 15px 20px; text-align: left; font-size: 15px; }
+.data-table th { background-color: #e3f2fd; color: #444; font-weight: 600; text-transform: uppercase; font-size: 13px; }
+.data-table tbody tr { border-bottom: 1px solid #f0f0f0; }
+.data-table tbody tr:hover { background-color: #fafafa; }
+.action-cell button { background: none; border: none; cursor: pointer; color: #e74c3c; font-size: 1.1rem; padding: 5px; }
+
+/* Categorie */
+.categories-grid { display: flex; flex-wrap: wrap; gap: 20px; }
+.category-pill {
+    background-color: #2b4eff; color: white; padding: 12px 25px;
+    border-radius: 50px; display: flex; align-items: center; justify-content: space-between;
+    min-width: 200px; box-shadow: 0 4px 10px rgba(43, 78, 255, 0.2);
+}
+.add-pill { width: 55px; height: 55px; min-width: unset; padding: 0; justify-content: center; font-size: 1.5rem; cursor: pointer; }
+.pill-actions { display: flex; align-items: center; gap: 10px; margin-left: 15px; }
+.divider { width: 1px; height: 18px; background-color: rgba(255, 255, 255, 0.4); }
+
+/* Form e Modale */
+.center-form { max-width: 500px; margin: 40px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+.center-form input, .modal-input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
+.form-actions, .modal-buttons { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; }
+.btn { padding: 10px 25px; border: none; border-radius: 25px; cursor: pointer; font-weight: 500; }
+.btn-primary { background-color: #2b4eff; color: white; }
+.btn-secondary { background-color: #f1f3f5; color: #555; }
+.btn-primary-blue { background-color: #00c853; color: white; }
+.error-msg { color: #e74c3c; font-size: 0.85rem; display: none; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; }
+.modal-content { background: white; padding: 40px; border-radius: 15px; width: 450px; text-align: center; }

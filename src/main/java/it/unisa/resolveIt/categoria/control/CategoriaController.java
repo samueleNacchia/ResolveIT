@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping("/categoria") // Prefisso per tutte le rotte di questo controller
+@RequestMapping("/categoria")
 public class CategoriaController {
 
     @Autowired
@@ -22,10 +22,11 @@ public class CategoriaController {
             categoriaImpl.disableCategoria(id);
         } catch (Exception e) {
             e.printStackTrace();
-
         }
-        return "redirect:/dashboard"; // Torna alla home dopo l'eliminazione
+        // MODIFICA QUI: Reindirizza a /gestore e dice di aprire la tab categorie
+        return "redirect:/gestore?section=categories";
     }
+
     @PostMapping("/enableCategoria")
     public String enableCategoria(@RequestParam("id") long id) {
         try {
@@ -33,27 +34,31 @@ public class CategoriaController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return "redirect:/home"; // Torna alla home dopo l'eliminazione
+        // MODIFICA QUI
+        return "redirect:/gestore?section=categories";
     }
-    // Aggiornamento dati Cliente (User)
-    @PostMapping("/updateCategoria")
-    public String updateCategoria(@ModelAttribute Categoria categoria) {
-        try {
-            categoriaImpl.updateCategoria(categoria);
-            return "redirect:/home?success"; // Ricarica la pagina home del gest
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/home?error";
-        }
-    }
+
     @PostMapping("/addCategoria")
     public String addCategoria(@ModelAttribute Categoria categoria) {
         try {
             categoriaImpl.addCategoria(categoria);
-            return "redirect:/home?success"; // Ricarica la pagina home del gestore
+            // MODIFICA QUI
+            return "redirect:/gestore?section=categories&success";
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/home?error";
+            // MODIFICA QUI: Anche in caso di errore, torniamo alle categorie
+            return "redirect:/gestore?section=categories&error";
+        }
+    }
+    @PostMapping("/updateCategoria")
+    public String updateCategoria(@ModelAttribute Categoria categoria) {
+        try {
+            // Il service aggiornerà il nome basandosi su ID_C presente nell'oggetto
+            categoriaImpl.updateCategoria(categoria);
+            return "redirect:/gestore?section=categories&success";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/gestore?section=categories&error";
         }
     }
 

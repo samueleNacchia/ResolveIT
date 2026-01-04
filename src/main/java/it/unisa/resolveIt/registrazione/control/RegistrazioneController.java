@@ -57,7 +57,7 @@ public class RegistrazioneController {
                 registrazioneService.registerOperator(dto);
                 model.addAttribute("successMessage", "Operatore creato con successo!");
                 model.addAttribute("utenteDTO", new RegistraUtenteDTO());
-                return "registrazione";
+                return "redirect:/gestore?section=accounts&success=operatorCreated";
             } else {
                 // Logica per l'utente anonimo che si registra come Cliente
                 UserDetails user = registrazioneService.registerClient(dto);
@@ -67,7 +67,7 @@ public class RegistrazioneController {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 request.getSession(true).setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
 
-                return "redirect:/home";
+                return "redirect:/user-homepage";
             }
 
         } catch (Exception e) {
@@ -76,4 +76,5 @@ public class RegistrazioneController {
             return "registrazione";
         }
     }
+
 }

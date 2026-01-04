@@ -20,7 +20,7 @@ public class AutenticazioneController {
             return "redirect:/ticket/operatore-home";
         }
         if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("GESTORE"))) {
-            return "redirect:/";
+            return "redirect:/gestore";
         }
         return "redirect:/ticket/home";
     }

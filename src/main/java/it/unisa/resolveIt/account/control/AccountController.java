@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping("/account") //
+@RequestMapping("/account")
 public class AccountController {
 
     @Autowired
@@ -16,25 +16,24 @@ public class AccountController {
 
     @PostMapping("/removeCliente")
     public String removeAccountCliente(@RequestParam("id") long id) {
-        try{
-        accountImpl.removeAccountCliente(id);
+        try {
+            accountImpl.removeAccountCliente(id);
+            return "redirect:/gestore?section=accounts&success";
         }
         catch (Exception e) {
             e.printStackTrace();
+            return "redirect:/gestore?section=accounts&error";
         }
-        return "redirect:/home"; // Torna alla home dopo l'eliminazione
     }
+
     @PostMapping("/removeOperatore")
     public String removeAccountOperatore(@RequestParam("id") long id) {
         try {
             accountImpl.removeAccountOperatore(id);
+            return "redirect:/gestore?section=accounts&success";
         } catch (Exception e) {
             e.printStackTrace();
+            return "redirect:/gestore?section=accounts&error";
         }
-
-        return "redirect:/home"; // Torna alla home dopo l'eliminazione
     }
-
-
-
 }
