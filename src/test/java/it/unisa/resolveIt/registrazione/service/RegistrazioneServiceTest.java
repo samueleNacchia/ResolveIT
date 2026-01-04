@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class) // JUnit 5 + Mockito
+@ExtendWith(MockitoExtension.class)
 class RegistrazioneServiceTest {
 
     @Mock
@@ -38,44 +38,39 @@ class RegistrazioneServiceTest {
 
     @Test
     void testRegistrazioneCliente_Successo() {
-        // GIVEN: Prepariamo i dati
         RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "password", "password");
 
         Cliente clienteSalvato = new Cliente("Mario", "Rossi", "mario@test.com", "passwordCriptata");
 
-        // WHEN: Esaminiamo il comportamento (Mockito dice che l'email non esiste)
         when(clienteRepository.existsByEmail(anyString())).thenReturn(false);
         when(operatoreRepository.existsByEmail(anyString())).thenReturn(false);
         when(gestoreRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("passwordCriptata");
-
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteSalvato);
 
-        // THEN: Chiamiamo il metodo
         UserDetails risultato = registrazioneService.registerClient(dto);
 
         assertNotNull(risultato);
-        verify(clienteRepository, times(1)).save(any(Cliente.class)); // Verifica che il save sia stato chiamato
+
+        // Verifica che il save sia stato chiamato
+        verify(clienteRepository, times(1)).save(any(Cliente.class));
     }
 
     @Test
     void testRegistrazioneOperatore_Successo() {
-        // GIVEN: Prepariamo i dati
         RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "password", "password");
 
         Operatore operatoreSalvato = new Operatore("Mario", "Rossi", "mario@test.com", "passwordCriptata");
 
-        // WHEN: Esaminiamo il comportamento (Mockito dice che l'email non esiste)
         when(clienteRepository.existsByEmail(anyString())).thenReturn(false);
         when(operatoreRepository.existsByEmail(anyString())).thenReturn(false);
         when(gestoreRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("passwordCriptata");
-
         when(operatoreRepository.save(any(Operatore.class))).thenReturn(operatoreSalvato);
 
-        // THEN: Chiamiamo il metodo
         registrazioneService.registerOperator(dto);
 
-        verify(operatoreRepository, times(1)).save(any(Operatore.class)); // Verifica che il save sia stato chiamato
+        // Verifica che il save sia stato chiamato
+        verify(operatoreRepository, times(1)).save(any(Operatore.class));
     }
 }

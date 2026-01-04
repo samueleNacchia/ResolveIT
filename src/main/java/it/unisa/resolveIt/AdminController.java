@@ -1,6 +1,5 @@
 package it.unisa.resolveIt;
 
-import it.unisa.resolveIt.model.entity.Gestore;
 import it.unisa.resolveIt.model.repository.CategoriaRepository;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
@@ -10,10 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/gestore")
 public class AdminController {
 
     @Autowired
@@ -25,7 +22,7 @@ public class AdminController {
     @Autowired
     private CategoriaRepository categoriaRepository;
 
-   @GetMapping("")
+    @GetMapping("/gestore")
     public String visualizzaDashboardGestore(@AuthenticationPrincipal UserDetails userDetails, Model model) {
 
         if (userDetails != null) {

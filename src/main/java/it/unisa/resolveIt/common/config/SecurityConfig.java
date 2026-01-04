@@ -27,9 +27,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        // Permettiamo solo login, registrazione e risorse statiche
-                        .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**", "/error").permitAll()
-                        .requestMatchers("/gestore").hasAuthority("GESTORE")
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/error").permitAll()
+                        .requestMatchers("/login", "/register").anonymous()
+                        .requestMatchers("/gestore", "/registerOperator").hasAuthority("GESTORE")
                         .requestMatchers("/ticket/home", "/ticket/salva", "/ticket/elimina/**").hasAuthority("CLIENTE")
                         .requestMatchers("/ticket/operatore-home", "/ticket/prendi/**", "/ticket/risolvi/**", "/ticket/rilascia/**").hasAuthority("OPERATORE")
                         .anyRequest().authenticated()
@@ -45,12 +45,13 @@ public class SecurityConfig {
                                 response.sendRedirect("/gestore");
                             } else if (roles.contains("OPERATORE")) {
                                 response.sendRedirect("/ticket/operatore-home");
-                            } else {
+                            } else if (roles.contains("CLIENTE")) {
                                 response.sendRedirect("/ticket/home");
+                            } else {
+                                response.sendRedirect(request.getContextPath() + "/");
                             }
                         })
                         .failureUrl("/login?error=true")
-                        .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")

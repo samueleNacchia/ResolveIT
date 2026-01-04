@@ -7,6 +7,7 @@ import it.unisa.resolveIt.model.repository.ClienteRepository;
 import it.unisa.resolveIt.model.repository.GestoreRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -44,7 +45,9 @@ public class AutenticazioneImpl implements UserDetailsService {
      *         utilizzabile per l'autenticazione in Spring Security
      * @throws UsernameNotFoundException se non esiste alcun utente con l'email fornita
      */
+
     @Override
+    @PreAuthorize("isAnonymous()")
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
         // Cerca gestore

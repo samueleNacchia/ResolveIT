@@ -28,6 +28,7 @@ public class RegistrazioneImpl implements RegistrazioneService{
     private PasswordEncoder passwordEncoder;
 
     @Override
+    @PreAuthorize("isAnonymous()")
     public UserDetails registerClient(RegistraUtenteDTO dto) {
         validateRegistration(dto);
         String passwordHash = passwordEncoder.encode(dto.getPassword());

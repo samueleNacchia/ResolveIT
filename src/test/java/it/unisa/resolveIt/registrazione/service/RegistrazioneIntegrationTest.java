@@ -3,6 +3,7 @@ package it.unisa.resolveIt.registrazione.service;
 import it.unisa.resolveIt.model.entity.Cliente;
 import it.unisa.resolveIt.model.entity.Operatore;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
+import it.unisa.resolveIt.model.repository.GestoreRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
 import it.unisa.resolveIt.registrazione.dto.RegistraUtenteDTO;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,9 @@ public class RegistrazioneIntegrationTest {
 
     @MockitoBean
     private OperatoreRepository operatoreRepository;
+
+    @MockitoBean
+    private GestoreRepository gestoreRepository;
 
     @MockitoBean
     private RegistrazioneService registrazioneService;
@@ -77,7 +81,6 @@ public class RegistrazioneIntegrationTest {
                         .param("cognome", "Rossi")
                         .with(csrf()))
                 .andExpect(view().name("registrazione"))
-                // Qui verifichi l'errore globale o sul campo confermaPassword
                 .andExpect(model().attributeHasErrors("utenteDTO"));
     }
 
@@ -123,6 +126,7 @@ public class RegistrazioneIntegrationTest {
         when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteFinto);
         when(clienteRepository.existsByEmail("mario@email.it")).thenReturn(false);
         when(operatoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
+        when(gestoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
 
 
         mockMvc.perform(post("/register")
@@ -133,7 +137,7 @@ public class RegistrazioneIntegrationTest {
                         .param("cognome", "Rossi")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/home"))
+                .andExpect(redirectedUrl("/user-homepage"))
                 .andExpect(authenticated().withUsername("mario@email.it")); // Verifica Auto-Login
     }
 
@@ -143,9 +147,10 @@ public class RegistrazioneIntegrationTest {
         when(operatoreRepository.save(any(Operatore.class))).thenReturn(operatoreFinto);
         when(clienteRepository.existsByEmail("mario@email.it")).thenReturn(false);
         when(operatoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
+        when(gestoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
 
 
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/registerOperator")
                         .with(user("gestore@test.com").authorities(new SimpleGrantedAuthority("GESTORE")))
                         .param("email", "mario@email.it")
                         .param("password", "Password123")
@@ -153,8 +158,10 @@ public class RegistrazioneIntegrationTest {
                         .param("nome", "Mario")
                         .param("cognome", "Rossi")
                         .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeExists("successMessage"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/gestore?section=accounts&success=operatorCreated"))
+                .andExpect(flash().attributeExists("successMessage"))
+                .andExpect(flash().attribute("successMessage", "Operatore creato con successo!"))
                 .andExpect(authenticated().withUsername("gestore@test.com")); // IL GESTORE RESTA LOGGATO;
     }
 }
