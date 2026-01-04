@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="it" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pannello Gestore - ResolveIt</title>
@@ -11,6 +15,7 @@
     <link rel="stylesheet" th:href="@{/css/header.css}">
     <link rel="stylesheet" th:href="@{/css/footer.css}">
     <link rel="stylesheet" th:href="@{/css/gestore.css}">
+
 </head>
 <body>
 
@@ -30,14 +35,7 @@
     </aside>
 
     <main class="main-content">
-<!--
-        <header class="top-header">
-            <div class="user-profile">
-                <div class="avatar" th:text="${#authentication.name.substring(0,2).toUpperCase()}">G</div>
-                <span class="username" th:text="${#authentication.name}">Gestore</span>
-            </div>
-        </header>
--->
+
         <div id="dynamic-content">
 
             <section id="home-view" class="active-section centered-view">
@@ -51,6 +49,7 @@
 
             <section id="accounts-view" class="hidden-section">
                 <div id="accounts-list">
+
                     <div class="section-title">
                         <h2>Operatori <i class="fa-solid fa-circle-plus add-btn" onclick="toggleOperatorForm(true)"></i></h2>
                     </div>
@@ -66,12 +65,20 @@
                             <td th:text="${operatore.cognome}"></td>
                             <td th:text="${operatore.email}"></td>
                             <td class="action-cell">
-                                <form th:action="@{/account/removeOperatore}" method="post" style="display:inline;">
-                                    <input type="hidden" name="id" th:value="${operatore.id}">
-                                    <button type="submit" style="background:none; border:none; cursor:pointer; color:inherit;">
-                                        <i class="fa-regular fa-trash-can"></i>
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        style="background:none; border:none; cursor:pointer; color:inherit;"
+                                        th:onclick="'confirmDisable(' + ${operatore.id} + ', \'operatore\')'">
+                                    <i class="fa-regular fa-trash-can" title="Disabilita account"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr th:each="operatore : ${operatori}" th:unless="${operatore.enabled}" class="disabled-row">
+                            <td th:text="${operatore.nome}"></td>
+                            <td th:text="${operatore.cognome}"></td>
+                            <td th:text="${operatore.email}"></td>
+                            <td class="action-cell">
+                                <span style="font-size: 0.8em;">(Disattivato)</span>
                             </td>
                         </tr>
                         </tbody>
@@ -90,12 +97,20 @@
                             <td th:text="${cliente.cognome}"></td>
                             <td th:text="${cliente.email}"></td>
                             <td class="action-cell">
-                                <form th:action="@{/account/removeCliente}" method="post" style="display:inline;">
-                                    <input type="hidden" name="id" th:value="${cliente.id}">
-                                    <button type="submit" style="background:none; border:none; cursor:pointer; color:inherit;">
-                                        <i class="fa-regular fa-trash-can"></i>
-                                    </button>
-                                </form>
+                                <button type="button"
+                                        style="background:none; border:none; cursor:pointer; color:inherit;"
+                                        th:onclick="'confirmDisable(' + ${cliente.id} + ', \'cliente\')'">
+                                    <i class="fa-regular fa-trash-can" title="Disabilita account"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <tr th:each="cliente : ${clienti}" th:unless="${cliente.enabled}" class="disabled-row">
+                            <td th:text="${cliente.nome}"></td>
+                            <td th:text="${cliente.cognome}"></td>
+                            <td th:text="${cliente.email}"></td>
+                            <td class="action-cell">
+                                <span style="font-size: 0.8em;">(Disattivato)</span>
                             </td>
                         </tr>
                         </tbody>
@@ -134,9 +149,8 @@
                         <i class="fa-solid fa-plus"></i>
                     </div>
 
-                    <div th:each="cat : ${categorie}"
-                         class="category-pill"
-                         th:style="${cat.stato} ? '' : 'background-color: #999;'">
+                    <div th:each="cat : ${categorie}" th:if="${cat.stato}"
+                         class="category-pill">
 
                         <span th:text="${cat.nome}">Nome Categoria</span>
 
@@ -150,14 +164,32 @@
 
                             <div class="divider"></div>
 
-                            <form th:if="${cat.stato}" th:action="@{/categoria/disableCategoria}" method="post" style="display:inline;">
+                            <form th:action="@{/categoria/disableCategoria}" method="post" style="display:inline;">
                                 <input type="hidden" name="id" th:value="${cat.ID_C}">
                                 <button type="submit" style="background:none; border:none; cursor:pointer; color:white;">
                                     <i class="fa-regular fa-trash-can" title="Disabilita"></i>
                                 </button>
                             </form>
+                        </div>
+                    </div>
 
-                            <form th:unless="${cat.stato}" th:action="@{/categoria/enableCategoria}" method="post" style="display:inline;">
+                    <div th:each="cat : ${categorie}" th:unless="${cat.stato}"
+                         class="category-pill"
+                         style="background-color: #999 !important; opacity: 0.6;">
+
+                        <span th:text="${cat.nome} + ' (Off)'">Nome Categoria</span>
+
+                        <div class="pill-actions">
+                            <i class="fa-solid fa-pen"
+                               style="cursor: pointer;"
+                               th:data-id="${cat.getID_C()}"
+                               th:data-nome="${cat.nome}"
+                               onclick="openEditCategoryModal(this.getAttribute('data-id'), this.getAttribute('data-nome'))">
+                            </i>
+
+                            <div class="divider"></div>
+
+                            <form th:action="@{/categoria/enableCategoria}" method="post" style="display:inline;">
                                 <input type="hidden" name="id" th:value="${cat.ID_C}">
                                 <button type="submit" style="background:none; border:none; cursor:pointer; color:white;">
                                     <i class="fa-solid fa-check" title="Abilita"></i>
@@ -165,10 +197,12 @@
                             </form>
                         </div>
                     </div>
+
                 </div>
             </section>
 
-        </div> </main>
+        </div>
+    </main>
 </div>
 
 <div id="category-modal" class="modal-overlay hidden-modal">
@@ -195,20 +229,11 @@
 </div>
 
 <script>
-    /* --- CONFIGURAZIONE REGEX --- */
-    // Nome, Cognome e Categoria: lettere (incluse accentate), spazi, apostrofi. Min 2, Max 30 caratteri.
     const regexNameSurname = /^[a-zA-Z\sàèìòùÀÈÌÒ’]{2,30}$/;
-
-    // Email: formato standard internazionale
     const regexEmail = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,10}$/;
-
-    // Categoria: stessa regola di nome e cognome
     const regexCategory = /^[a-zA-Z\sàèìòùÀÈÌÒ’]{2,30}$/;
 
-
-    /* --- LOGICA DI NAVIGAZIONE (SPA) --- */
     function showSection(sectionId) {
-        // 1. Nascondiamo TUTTE le sezioni principali
         const homeView = document.getElementById('home-view');
         const accountsView = document.getElementById('accounts-view');
         const categoriesView = document.getElementById('categories-view');
@@ -217,51 +242,30 @@
         accountsView.style.display = 'none';
         categoriesView.style.display = 'none';
 
-        // 2. Mostriamo solo quella richiesta con il display corretto
         if (sectionId === 'accounts') {
-            // Le tabelle si visualizzano meglio in block
             accountsView.style.display = 'block';
-
-            // Quando si torna qui, assicuriamoci di vedere la lista e non il form di aggiunta
             document.getElementById('accounts-list').style.display = 'block';
             document.getElementById('add-operator-form').style.display = 'none';
-
         } else if (sectionId === 'categories') {
-            // Le categorie usano flex grid, ma il contenitore padre va bene in block
             categoriesView.style.display = 'block';
-
         } else {
-            // IMPORTANTE: La Home DEVE essere 'flex' per centrare l'immagine e il testo
-            // Se metti 'block' qui, il contenuto finirà in alto a sinistra.
             homeView.style.display = 'flex';
         }
     }
 
-
-    /* --- GESTIONE FORM OPERATORE (Swap Lista <-> Form) --- */
     function toggleOperatorForm(show) {
         const list = document.getElementById('accounts-list');
         const form = document.getElementById('add-operator-form');
-
         if (show) {
             list.style.display = 'none';
-            // Il form è centrato dalla classe .center-form, quindi usiamo flex o block.
-            // Dato il CSS fornito, 'block' dentro il contenitore padre va bene,
-            // ma se la classe .center-form non ha display specificato, flex aiuta a centrare.
             form.style.display = 'flex';
         } else {
             list.style.display = 'block';
             form.style.display = 'none';
-            resetErrors(); // Pulisce eventuali messaggi di errore precedenti
+            resetErrors();
         }
     }
 
-
-    /* --- GESTIONE MODALE CATEGORIA (Overlay) --- */
-    /* --- GESTIONE MODALE CATEGORIA (AGGIUNTA vs MODIFICA) --- */
-
-    // 1. Funzione per aprire il modale in modalità AGGIUNTA (Reset)
-    // Questa viene chiamata quando clicchi sul pulsante "+" gigante
     function toggleCategoryModal(show) {
         const modal = document.getElementById('category-modal');
         const form = document.getElementById('formCategoria');
@@ -270,11 +274,10 @@
         const inputNome = document.getElementById('catNome');
 
         if (show) {
-            // Resetta il form per una "Nuova Creazione"
-            form.action = '/categoria/addCategoria'; // Action di default
+            form.action = '/categoria/addCategoria';
             title.innerText = "Inserisci nome della categoria";
-            inputId.value = "0"; // ID vuoto
-            inputNome.value = ""; // Nome vuoto
+            inputId.value = "0";
+            inputNome.value = "";
             modal.style.display = 'flex';
         } else {
             modal.style.display = 'none';
@@ -282,8 +285,6 @@
         }
     }
 
-    // 2. Funzione per aprire il modale in modalità MODIFICA
-    // Questa viene chiamata quando clicchi sulla "Penna"
     function openEditCategoryModal(id, nomeAttuale) {
         const modal = document.getElementById('category-modal');
         const form = document.getElementById('formCategoria');
@@ -291,90 +292,101 @@
         const inputId = document.getElementById('catId');
         const inputNome = document.getElementById('catNome');
 
-        // Imposta il form per la "Modifica"
-        form.action = '/categoria/updateCategoria'; // Cambia l'URL di destinazione
-        title.innerText = "Modifica categoria"; // Cambia il titolo
-
-        inputId.value = id; // Imposta l'ID della categoria da modificare
-        inputNome.value = nomeAttuale; // Pre-compila il nome esistente
-
-        modal.style.display = 'flex'; // Mostra il modale
+        form.action = '/categoria/updateCategoria';
+        title.innerText = "Modifica categoria";
+        inputId.value = id;
+        inputNome.value = nomeAttuale;
+        modal.style.display = 'flex';
     }
 
-
-    /* --- UTILITY: RESET ERRORI VISIVI --- */
     function resetErrors() {
-        // Nasconde tutti i paragrafi con classe .error-msg
         document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
     }
 
-
-    /* --- VALIDAZIONE FORM OPERATORE --- */
     function validateOperatorForm() {
         let isValid = true;
-
-        // Recupero valori
         const nome = document.getElementById('opNome').value;
         const cognome = document.getElementById('opCognome').value;
         const email = document.getElementById('opEmail').value;
 
-        // Controllo Nome
-        if (!regexNameSurname.test(nome)) {
-            document.getElementById('errorOpNome').style.display = 'block';
-            isValid = false;
-        } else {
-            document.getElementById('errorOpNome').style.display = 'none';
-        }
+        if (!regexNameSurname.test(nome)) { document.getElementById('errorOpNome').style.display = 'block'; isValid = false; }
+        else document.getElementById('errorOpNome').style.display = 'none';
 
-        // Controllo Cognome
-        if (!regexNameSurname.test(cognome)) {
-            document.getElementById('errorOpCognome').style.display = 'block';
-            isValid = false;
-        } else {
-            document.getElementById('errorOpCognome').style.display = 'none';
-        }
+        if (!regexNameSurname.test(cognome)) { document.getElementById('errorOpCognome').style.display = 'block'; isValid = false; }
+        else document.getElementById('errorOpCognome').style.display = 'none';
 
-        // Controllo Email
-        if (!regexEmail.test(email)) {
-            document.getElementById('errorOpEmail').style.display = 'block';
-            isValid = false;
-        } else {
-            document.getElementById('errorOpEmail').style.display = 'none';
-        }
+        if (!regexEmail.test(email)) { document.getElementById('errorOpEmail').style.display = 'block'; isValid = false; }
+        else document.getElementById('errorOpEmail').style.display = 'none';
 
-        return isValid; // Se false, il form non viene inviato
+        return isValid;
     }
 
-
-    /* --- VALIDAZIONE FORM CATEGORIA --- */
     function validateCategoryForm() {
         const nomeCat = document.getElementById('catNome').value;
-
-        if (!regexCategory.test(nomeCat)) {
-            document.getElementById('errorCatNome').style.display = 'block';
-            return false; // Blocca invio
-        } else {
-            document.getElementById('errorCatNome').style.display = 'none';
-            return true; // Procedi
-        }
+        if (!regexCategory.test(nomeCat)) { document.getElementById('errorCatNome').style.display = 'block'; return false; }
+        else { document.getElementById('errorCatNome').style.display = 'none'; return true; }
     }
-    /* --- INIZIALIZZAZIONE --- */
+
     document.addEventListener("DOMContentLoaded", function() {
-        // Legge i parametri dall'URL
         const urlParams = new URLSearchParams(window.location.search);
         const sectionParam = urlParams.get('section');
-
-        // Se l'URL contiene ?section=categories, apri quella tab
-        if (sectionParam === 'categories') {
-            showSection('categories');
-        } else if (sectionParam === 'accounts') {
-            showSection('accounts');
-        } else {
-            // Altrimenti vai alla home default
-            showSection('home');
-        }
+        if (sectionParam === 'categories') { showSection('categories'); }
+        else if (sectionParam === 'accounts') { showSection('accounts'); }
+        else { showSection('home'); }
     });
-</script>
-<div th:replace="~{fragments/footer :: footer-fragment}"></div>
+    /* --- FUNZIONE DI CONFERMA DISABILITAZIONE --- */
+    function confirmDisable(id, tipoUtente) {
+        const config = {
+            'operatore': {
+                title: 'Disabilitare operatore?',
+                text: 'L\'operatore non potrà più accedere al sistema.',
+                url: '/account/removeOperatore'
+            },
+            'cliente': {
+                title: 'Disabilitare cliente?',
+                text: 'Il cliente non potrà più effettuare login.',
+                url: '/account/removeCliente'
+            }
+        };
+
+        const c = config[tipoUtente];
+
+        Swal.fire({
+            title: c.title,
+            text: c.text,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33', // Rosso per azione distruttiva
+            cancelButtonColor: '#3085d6', // Blu per annulla
+            confirmButtonText: 'Sì, disabilita',
+            cancelButtonText: 'Annulla'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = c.url;
+
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_csrf';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                }
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id'; // Questo deve matchare @RequestParam("id") nel Controller
+                idInput.value = id;
+                form.appendChild(idInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }</script>
 </body>
 </html>

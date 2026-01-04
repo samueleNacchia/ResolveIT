@@ -3,10 +3,14 @@
         xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
         class="main-header">
 
-    <div class="header-container">
-        <a th:href="@{/dashboard}">
+    <div class="header-container" sec:authorize="hasAnyAuthority('CLIENTE','OPERATORE','GESTORE')">
+        <a th:href="@{/dashboard}" sec:authorize="hasAnyAuthority('CLIENTE','OPERATORE')">
             <img th:src="@{/images/logo.png}" alt="Logo" class="logo-header">
         </a>
+        <a th:href="@{/gestore}" sec:authorize="hasAnyAuthority('GESTORE')">
+            <img th:src="@{/images/logo.png}" alt="Logo" class="logo-header">
+        </a>
+
 
         <div class="user-menu-container" sec:authorize="isAuthenticated()">
 

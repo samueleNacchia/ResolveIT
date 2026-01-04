@@ -190,3 +190,12 @@ footer {
 
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; }
 .modal-content { background: white; padding: 40px; border-radius: 15px; width: 450px; text-align: center; }
+.disabled-row {
+    background-color: #f2f2f2 !important; /* Grigio chiaro */
+    color: #888 !important; /* Testo grigio scuro */
+    font-style: italic;
+}
+
+.disabled-row td {
+    opacity: 0.7;
+}
