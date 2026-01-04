@@ -62,7 +62,10 @@ public class CategoriaImpl implements  CategoriaService{
         if (categoria == null) {
             throw new IllegalArgumentException("Dati categoria non validi");
         }
-
+        if (categoriaRepository.findByNome(categoria.getNome())!= null)
+        {
+            throw new IllegalArgumentException("Categoria già esistente");
+        }
         Optional<Categoria> esistente = categoriaRepository.findById(categoria.getID_C());
 
         if (esistente.isPresent()) {
