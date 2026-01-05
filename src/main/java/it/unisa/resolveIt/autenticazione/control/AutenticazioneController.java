@@ -1,5 +1,6 @@
 package it.unisa.resolveIt.autenticazione.control;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Controller;
@@ -11,7 +12,7 @@ import java.util.Set;
 public class AutenticazioneController {
 
     // Mostra solo il form HTML
-    @GetMapping("/login")
+    @GetMapping("/login-form")
     public String showLoginForm(Authentication auth) {
         if (auth != null && auth.isAuthenticated()) {
             Set<String> roles = AuthorityUtils.authorityListToSet(auth.getAuthorities());

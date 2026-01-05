@@ -30,7 +30,7 @@ public class ErrorHandler {
             }
         }
 
-        return "redirect:/login";
+        return "redirect:/login-form";
     }
 }
 

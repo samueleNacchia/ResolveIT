@@ -72,7 +72,7 @@ public class RegistrazioneController {
     @PostMapping("/registerOperator")
     public String registerOperatorController(@Valid @ModelAttribute("utenteDTO") RegistraUtenteDTO dto, BindingResult result, Model model, HttpServletRequest request, RedirectAttributes redirectAttributes) {
 
-
+        /*
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             if (!dto.getPassword().equals(dto.getConfermaPassword())) {
                 // Aggiungiamo l'errore SOLO al campo confermaPassword
@@ -83,7 +83,7 @@ public class RegistrazioneController {
         //Controllo validazione formale (es. campi vuoti)
         if (result.hasErrors()) {
             return "gestore";
-        }
+        }*/
 
         try {
             // Logica per il Gestore che crea un Operatore

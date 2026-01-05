@@ -14,7 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -35,6 +35,68 @@ class RegistrazioneServiceTest {
 
     @InjectMocks
     private RegistrazioneImpl registrazioneService; // La classe da testare
+
+    @Test
+    void emailInUso_operatore() {
+        RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "pass", "pass");
+
+        when(operatoreRepository.existsByEmail("mario@test.com")).thenReturn(true);
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            registrazioneService.registerClient(dto);
+        });
+
+        assertEquals("Email già in uso!", exception.getMessage());
+
+        // Verifica che il salvataggio NON sia avvenuto
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void emailInUso_cliente() {
+        RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "pass", "pass");
+
+        when(clienteRepository.existsByEmail("mario@test.com")).thenReturn(true);
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            registrazioneService.registerClient(dto);
+        });
+
+        assertEquals("Email già in uso!", exception.getMessage());
+
+        // Verifica che il salvataggio NON sia avvenuto
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void emailInUso_gestore() {
+        RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "pass", "pass");
+
+        when(gestoreRepository.existsByEmail("mario@test.com")).thenReturn(true);
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            registrazioneService.registerClient(dto);
+        });
+
+        assertEquals("Email già in uso!", exception.getMessage());
+
+        // Verifica che il salvataggio NON sia avvenuto
+        verify(clienteRepository, never()).save(any());
+    }
+
+    @Test
+    void testRegistrazione_PasswordsDiverse() {
+        RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "pass1", "pass2");
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            registrazioneService.registerClient(dto);
+        });
+
+        assertEquals("Le password non coincidono!", exception.getMessage());
+
+        // Verifica che il salvataggio NON sia avvenuto
+        verify(clienteRepository, never()).save(any());
+    }
 
     @Test
     void testRegistrazioneCliente_Successo() {

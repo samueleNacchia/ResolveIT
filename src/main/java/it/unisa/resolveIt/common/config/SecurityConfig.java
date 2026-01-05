@@ -27,15 +27,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/error").permitAll()
-                        .requestMatchers("/login", "/register").anonymous()
+                        .requestMatchers("/login-form", "/error").permitAll()
+                        .requestMatchers("/register").anonymous()
                         .requestMatchers("/gestore", "/registerOperator").hasAuthority("GESTORE")
                         .requestMatchers("/ticket/home", "/ticket/salva", "/ticket/elimina/**").hasAuthority("CLIENTE")
                         .requestMatchers("/ticket/operatore-home", "/ticket/prendi/**", "/ticket/risolvi/**", "/ticket/rilascia/**").hasAuthority("OPERATORE")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login")
+                        .loginPage("/login-form")
                         .loginProcessingUrl("/login")
                         .successHandler((request, response, authentication) -> {
                             Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
@@ -51,7 +51,7 @@ public class SecurityConfig {
                                 response.sendRedirect(request.getContextPath() + "/");
                             }
                         })
-                        .failureUrl("/login?error=true")
+                        .failureUrl("/login-form?error=true")
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
@@ -73,7 +73,7 @@ public class SecurityConfig {
                                     response.sendRedirect("/ticket/home");
                                 }
                             } else {
-                                response.sendRedirect("/login");
+                                response.sendRedirect("/login-form");
                             }
                         })
                 );

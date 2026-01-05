@@ -11,9 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
@@ -113,13 +114,10 @@ public class RegistrazioneIntegrationTest {
     }
 
     // --- TC_1.2_6: Registrazione Corretta ---
-    @Test
-    public void registrazioneCorretta() throws Exception {
-        registrazioneCliente_Successo();
-        registrazioneOperatore_Successo();
-    }
 
-    private void registrazioneCliente_Successo() throws Exception {
+    @Test
+    @WithAnonymousUser
+    public void registrazioneCliente_Successo() throws Exception {
         Cliente clienteFinto = new Cliente("Mario", "Rossi", "mario@email.it", "hashedPass");
 
         when(registrazioneService.registerClient(any(RegistraUtenteDTO.class))).thenReturn(clienteFinto);
@@ -141,7 +139,9 @@ public class RegistrazioneIntegrationTest {
                 .andExpect(authenticated().withUsername("mario@email.it")); // Verifica Auto-Login
     }
 
-    private void registrazioneOperatore_Successo() throws Exception {
+    @Test
+    @WithMockUser(authorities = "GESTORE")
+    public void registrazioneOperatore_Successo() throws Exception {
         Operatore operatoreFinto = new Operatore("Mario", "Rossi", "mario@email.it", "hashedPass");
 
         when(operatoreRepository.save(any(Operatore.class))).thenReturn(operatoreFinto);
@@ -164,4 +164,33 @@ public class RegistrazioneIntegrationTest {
                 .andExpect(flash().attribute("successMessage", "Operatore creato con successo!"))
                 .andExpect(authenticated().withUsername("gestore@test.com")); // IL GESTORE RESTA LOGGATO;
     }
+
+    @Test
+    @WithMockUser(authorities = "CLIENTE")
+    void registerOperator_NonPermesso() throws Exception {
+        mockMvc.perform(post("/registerOperator")
+                        .with(user("gestore@test.com").authorities(new SimpleGrantedAuthority("GESTORE")))
+                        .param("email", "mario@email.it")
+                        .param("password", "Password123")
+                        .param("confermaPassword", "Password123")
+                        .param("nome", "Mario")
+                        .param("cognome", "Rossi")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    @WithMockUser(authorities = "CLIENTE")
+    void registerClient_NonPermesso() throws Exception {
+        mockMvc.perform(post("/register")
+                        .with(user("gestore@test.com").authorities(new SimpleGrantedAuthority("GESTORE")))
+                        .param("email", "mario@email.it")
+                        .param("password", "Password123")
+                        .param("confermaPassword", "Password123")
+                        .param("nome", "Mario")
+                        .param("cognome", "Rossi")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection());
+    }
+
 }
