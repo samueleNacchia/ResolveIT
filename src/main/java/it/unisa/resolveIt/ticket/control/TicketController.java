@@ -70,10 +70,8 @@ public class TicketController {
 
         if (result.hasErrors()) {
             Cliente cliente = clienteRepository.findByEmail(principal.getName());
-            // DEVI RICARICARE I DATI FILTRATI ANCHE QUI
             model.addAttribute("lista", ticketService.getTicketUtente(cliente));
             model.addAttribute("categorie", categoriaRepository.findAll());
-            // Aggiungi parametri di default per non rompere i bottoni nell'header
             model.addAttribute("ordineSelezionato", "desc");
             return "user-homepage";
         }
