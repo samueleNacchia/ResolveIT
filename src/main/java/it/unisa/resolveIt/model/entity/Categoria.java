@@ -31,9 +31,12 @@ public class Categoria {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true; // Ottimizzazione
         if (o == null || getClass() != o.getClass()) return false;
         Categoria categoria = (Categoria) o;
-        return ID_C == categoria.ID_C && Objects.equals(nome, categoria.nome) && stato == categoria.stato;
+        return ID_C == categoria.ID_C &&
+                stato == categoria.stato &&
+                Objects.equals(nome, categoria.nome);
     }
 
     @Override

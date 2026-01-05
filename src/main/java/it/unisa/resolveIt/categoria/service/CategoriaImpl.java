@@ -50,7 +50,6 @@ public class CategoriaImpl implements  CategoriaService{
 
     @Transactional
     public void addCategoria(Categoria categoria) {
-        // Nota: uso getID_C() perché hai confermato che l'entità usa ID_C
         if (categoriaRepository.existsById(categoria.getID_C()) || (categoriaRepository.findByNome(categoria.getNome()) != null))
             throw new RuntimeException("Categoria già presente nel database");
         else
