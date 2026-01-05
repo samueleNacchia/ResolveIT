@@ -12,6 +12,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script th:src="@{/js/ticket-actions.js}"></script>
+  <script th:src="@{/js/ticket-validation.js}"></script>
 
   <style type="text/tailwindcss">
     @layer components {
@@ -169,14 +170,13 @@
                 <span th:unless="${t.nomeFile != null}" class="text-gray-300 text-xs">-</span>
               </td>
               <td class="px-6 py-4 text-right">
-                <form th:action="@{/ticket/elimina/{id}(id=${t.id})}" method="POST"
-                      th:onsubmit="${t.stato.name() == 'ANNULLATO'} ? 'return false;' : 'return confirm(\'Eliminare?\')'">
-                  <button type="submit"
-                          th:class="${t.stato.name() == 'ANNULLATO' || t.stato.name() == 'RISOLTO'} ? 'text-gray-400 cursor-not-allowed' : 'text-red-400 hover:text-red-600'"
-                          th:disabled="${t.stato.name() == 'ANNULLATO' || t.stato.name() == 'RISOLTO'}">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>
-                </form>
+                <button type="button"
+                        th:onclick="|confirmAction('${t.id}', 'elimina')|"
+                        th:class="${t.stato.name() == 'ANNULLATO' || t.stato.name() == 'RISOLTO'} ? 'text-gray-400 cursor-not-allowed' : 'text-red-400 hover:text-red-600'"
+                        th:disabled="${t.stato.name() == 'ANNULLATO' || t.stato.name() == 'RISOLTO'}"
+                        title="Annulla Ticket">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
               </td>
             </tr>
             <tr th:id="'attachment-row-' + ${t.id}" class="hidden row-details">
@@ -196,8 +196,9 @@
 
     <div id="tab-new-ticket" class="tab-content">
       <div class="max-w-3xl mx-auto bg-white p-10 rounded-2xl shadow-sm border border-gray-100">
-        <form th:action="@{/ticket/salva}" th:object="${ticketDTO}" method="POST" enctype="multipart/form-data" class="space-y-6">
-          <div>
+        <form id="ticketForm" th:action="@{/ticket/salva}" th:object="${ticketDTO}"
+              method="POST" enctype="multipart/form-data" class="space-y-6"
+              onsubmit="return validateTicketForm(event)">          <div>
             <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Categoria</label>
             <select th:field="*{idCategoria}" class="input-custom" >
               <option th:each="cat : ${categorie}" th:value="${cat.ID_C}" th:text="${cat.nome}" th:if="${cat.getStato()}"> </option>>
