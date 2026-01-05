@@ -31,6 +31,11 @@ class AutenticazioneServiceTest {
     @InjectMocks
     private AutenticazioneImpl autenticazioneService;
 
+    /**
+     * Verifica che il metodo carichi correttamente un {@link Gestore} cercandolo per email.
+     * Assicura che, se l'utente è presente nel repository dei gestori, venga restituito
+     * un oggetto {@link UserDetails} valido con l'username corretto.
+     */
     @Test
     void loadUserByUsername_TrovaGestore_Successo() {
         String email = "gestore@test.com";
@@ -45,6 +50,11 @@ class AutenticazioneServiceTest {
         assertEquals(email, user.getUsername());
     }
 
+    /**
+     * Verifica il caricamento di un {@link Operatore} quando la ricerca nei gestori fallisce.
+     * Il test simula l'assenza dell'email nel repository dei gestori e la sua presenza
+     * in quello degli operatori, validando il risultato restituito.
+     */
     @Test
     void loadUserByUsername_TrovaOperatore_Successo() {
         String email = "operatore@test.com";
@@ -60,6 +70,11 @@ class AutenticazioneServiceTest {
         assertEquals(email, user.getUsername());
     }
 
+    /**
+     * Verifica il caricamento di un {@link Cliente} quando l'email non appartiene né
+     * a un gestore né a un operatore. Assicura che il servizio completi la catena di
+     * ricerca arrivando correttamente al repository dei clienti.
+     */
     @Test
     void loadUserByUsername_TrovaCliente_Successo() {
         String email = "cliente@test.com";
@@ -76,6 +91,10 @@ class AutenticazioneServiceTest {
         assertEquals(email, user.getUsername());
     }
 
+    /**
+     * Verifica che venga lanciata un'eccezione {@link UsernameNotFoundException}
+     * qualora l'email fornita non sia presente in nessuno dei repository del sistema.
+     */
     @Test
     void loadUserByUsername_UtenteInesistente() {
         when(operatoreRepository.findByEmail(anyString())).thenReturn(null);

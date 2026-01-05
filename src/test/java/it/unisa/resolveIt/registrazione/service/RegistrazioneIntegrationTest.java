@@ -1,26 +1,27 @@
 package it.unisa.resolveIt.registrazione.service;
 
 import it.unisa.resolveIt.model.entity.Cliente;
-import it.unisa.resolveIt.model.entity.Operatore;
 import it.unisa.resolveIt.model.repository.ClienteRepository;
 import it.unisa.resolveIt.model.repository.GestoreRepository;
 import it.unisa.resolveIt.model.repository.OperatoreRepository;
 import it.unisa.resolveIt.registrazione.dto.RegistraUtenteDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -43,7 +44,18 @@ public class RegistrazioneIntegrationTest {
     @MockitoBean
     private RegistrazioneService registrazioneService;
 
-    // --- TC_1.2_1: Formato Email Errato (FE1) ---
+    @Autowired
+    private WebApplicationContext context;
+
+    @BeforeEach
+    public void setup() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+    }
+
+    /**
+     * Verifica il comportamento del sistema in caso di inserimento di un'email con formato non valido (FE1).
+     * Il test si aspetta il ritorno alla vista di registrazione con errori di validazione sul campo "email".
+     */
     @Test
     public void emailErrata() throws Exception {
         mockMvc.perform(post("/register")
@@ -57,7 +69,33 @@ public class RegistrazioneIntegrationTest {
                 .andExpect(model().attributeHasFieldErrors("utenteDTO", "email"));
     }
 
-    // --- TC_1.2_2: Password troppo corta (LP1) ---
+    /**
+     * Verifica la gestione dell'errore quando si tenta di registrare un utente con un'email già presente nel sistema.
+     * Simula il lancio di un'eccezione dal service e verifica che il messaggio d'errore sia visualizzato correttamente nel modello.
+     */
+    @Test
+    public void emailGiaRegistrata() throws Exception {
+
+        when(registrazioneService.registerClient(any(RegistraUtenteDTO.class)))
+                .thenThrow(new RuntimeException("Email già in uso!"));
+
+        mockMvc.perform(post("/register")
+                        .param("email", "cliente@test.com")
+                        .param("password", "Password123")
+                        .param("confermaPassword", "Password123")
+                        .param("nome", "Mario")
+                        .param("cognome", "Rossi")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("registrazione"))
+                .andExpect(model().attributeExists("errorMessage"))
+                .andExpect(model().attribute("errorMessage", "Email già in uso!"));
+    }
+
+    /**
+     * Verifica il vincolo di lunghezza minima della password (LP1).
+     * Il test si aspetta un errore di validazione sul campo "password" se questa è inferiore a 8 caratteri.
+     */
     @Test
     public void passwordCorta() throws Exception {
         mockMvc.perform(post("/register")
@@ -71,7 +109,10 @@ public class RegistrazioneIntegrationTest {
                 .andExpect(model().attributeHasFieldErrors("utenteDTO", "password"));
     }
 
-    // --- TC_1.2_3: Conferma Password non corrispondente (MCP1) ---
+    /**
+     * Verifica che il sistema segnali un errore quando la password di conferma non coincide con la password inserita (MCP1).
+     * Controlla che l'oggetto DTO contenga errori di validazione globali o di corrispondenza.
+     */
     @Test
     public void matchPasswordErrato() throws Exception {
         mockMvc.perform(post("/register")
@@ -81,11 +122,15 @@ public class RegistrazioneIntegrationTest {
                         .param("nome", "Mario")
                         .param("cognome", "Rossi")
                         .with(csrf()))
+                .andExpect(status().isOk())
                 .andExpect(view().name("registrazione"))
-                .andExpect(model().attributeHasErrors("utenteDTO"));
+                .andExpect(content().string(containsString("Le password non coincidono!")));
     }
 
-    // --- TC_1.2_4: Nome non corretto (FNO1) ---
+    /**
+     * Verifica la validazione del campo nome (FNO1).
+     * Il test fallisce se il nome inserito non è valido.
+     */
     @Test
     public void nomeErrato() throws Exception {
         mockMvc.perform(post("/register")
@@ -99,7 +144,10 @@ public class RegistrazioneIntegrationTest {
                 .andExpect(model().attributeHasFieldErrors("utenteDTO", "nome"));
     }
 
-    // --- TC_1.2_5: Cognome non corretto (FCO1) ---
+    /**
+     * Verifica la validazione del campo cognome (FCO1).
+     *  Il test fallisce se il cognome inserito non è valido.
+     */
     @Test
     public void cognomeErrato() throws Exception {
         mockMvc.perform(post("/register")
@@ -113,19 +161,17 @@ public class RegistrazioneIntegrationTest {
                 .andExpect(model().attributeHasFieldErrors("utenteDTO", "cognome"));
     }
 
-    // --- TC_1.2_6: Registrazione Corretta ---
-
+    /**
+     * Testa lo scenario di successo per la registrazione di un nuovo Cliente.
+     * Verifica che, dopo l'inserimento di dati validi, l'utente venga reindirizzato alla homepage
+     * e che avvenga l'autenticazione automatica (Auto-Login).
+     */
     @Test
     @WithAnonymousUser
     public void registrazioneCliente_Successo() throws Exception {
         Cliente clienteFinto = new Cliente("Mario", "Rossi", "mario@email.it", "hashedPass");
 
         when(registrazioneService.registerClient(any(RegistraUtenteDTO.class))).thenReturn(clienteFinto);
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(clienteFinto);
-        when(clienteRepository.existsByEmail("mario@email.it")).thenReturn(false);
-        when(operatoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
-        when(gestoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
-
 
         mockMvc.perform(post("/register")
                         .param("email", "mario@email.it")
@@ -135,23 +181,19 @@ public class RegistrazioneIntegrationTest {
                         .param("cognome", "Rossi")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/user-homepage"))
+                .andExpect(redirectedUrl("/ticket/home"))
                 .andExpect(authenticated().withUsername("mario@email.it")); // Verifica Auto-Login
     }
 
+    /**
+     * Verifica che un Gestore autenticato possa registrare correttamente un nuovo Operatore nel sistema.
+     * Controlla il reindirizzamento alla dashboard del gestore e la presenza di un messaggio di conferma (flash attribute).
+     */
     @Test
-    @WithMockUser(authorities = "GESTORE")
+    @WithMockUser(username = "gestore@test.com", authorities = "GESTORE")
     public void registrazioneOperatore_Successo() throws Exception {
-        Operatore operatoreFinto = new Operatore("Mario", "Rossi", "mario@email.it", "hashedPass");
-
-        when(operatoreRepository.save(any(Operatore.class))).thenReturn(operatoreFinto);
-        when(clienteRepository.existsByEmail("mario@email.it")).thenReturn(false);
-        when(operatoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
-        when(gestoreRepository.existsByEmail("mario@email.it")).thenReturn(false);
-
 
         mockMvc.perform(post("/registerOperator")
-                        .with(user("gestore@test.com").authorities(new SimpleGrantedAuthority("GESTORE")))
                         .param("email", "mario@email.it")
                         .param("password", "Password123")
                         .param("confermaPassword", "Password123")
@@ -160,16 +202,20 @@ public class RegistrazioneIntegrationTest {
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/gestore?section=accounts&success=operatorCreated"))
-                .andExpect(flash().attributeExists("successMessage"))
                 .andExpect(flash().attribute("successMessage", "Operatore creato con successo!"))
                 .andExpect(authenticated().withUsername("gestore@test.com")); // IL GESTORE RESTA LOGGATO;
+
+        verify(registrazioneService, times(1)).registerOperator(any(RegistraUtenteDTO.class));
     }
 
+    /**
+     * Verifica i vincoli di sicurezza per la registrazione degli operatori.
+     * Controlla che un utente con ruolo CLIENTE non abbia i permessi per accedere alla funzione di creazione operatore.
+     */
     @Test
     @WithMockUser(authorities = "CLIENTE")
     void registerOperator_NonPermesso() throws Exception {
         mockMvc.perform(post("/registerOperator")
-                        .with(user("gestore@test.com").authorities(new SimpleGrantedAuthority("GESTORE")))
                         .param("email", "mario@email.it")
                         .param("password", "Password123")
                         .param("confermaPassword", "Password123")
@@ -179,18 +225,22 @@ public class RegistrazioneIntegrationTest {
                 .andExpect(status().is3xxRedirection());
     }
 
+    /**
+     * Verifica che un utente già autenticato non possa rieseguire
+     * una procedura di registrazione cliente standard.
+     */
     @Test
     @WithMockUser(authorities = "CLIENTE")
     void registerClient_NonPermesso() throws Exception {
         mockMvc.perform(post("/register")
-                        .with(user("gestore@test.com").authorities(new SimpleGrantedAuthority("GESTORE")))
                         .param("email", "mario@email.it")
                         .param("password", "Password123")
                         .param("confermaPassword", "Password123")
                         .param("nome", "Mario")
                         .param("cognome", "Rossi")
                         .with(csrf()))
-                .andExpect(status().is3xxRedirection());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/ticket/home"));
     }
 
 }

@@ -3,12 +3,9 @@ package it.unisa.resolveIt.registrazione.control;
 import it.unisa.resolveIt.registrazione.dto.RegistraUtenteDTO;
 import it.unisa.resolveIt.registrazione.service.RegistrazioneService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -42,7 +39,7 @@ public class RegistrazioneController {
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             if (!dto.getPassword().equals(dto.getConfermaPassword())) {
                 // Aggiungiamo l'errore SOLO al campo confermaPassword
-                result.rejectValue("confermaPassword", "error.match", "Le password non coincidono");
+                result.rejectValue("confermaPassword", "error.match", "Le password non coincidono!");
             }
         }
 
@@ -60,7 +57,7 @@ public class RegistrazioneController {
             SecurityContextHolder.getContext().setAuthentication(authToken);
             request.getSession(true).setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
 
-            return "redirect:/user-homepage";
+            return "redirect:/ticket/home";
 
         } catch (Exception e) {
             //Errore logico (errore del service)
@@ -70,7 +67,7 @@ public class RegistrazioneController {
     }
 
     @PostMapping("/registerOperator")
-    public String registerOperatorController(@Valid @ModelAttribute("utenteDTO") RegistraUtenteDTO dto, BindingResult result, Model model, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+    public String registerOperatorController(@Valid @ModelAttribute("utenteDTO") RegistraUtenteDTO dto, /*BindingResult result, Model model, HttpServletRequest request,*/ RedirectAttributes redirectAttributes) {
 
         /*
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {

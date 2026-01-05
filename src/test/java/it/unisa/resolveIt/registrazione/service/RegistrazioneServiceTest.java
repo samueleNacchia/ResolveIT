@@ -36,6 +36,10 @@ class RegistrazioneServiceTest {
     @InjectMocks
     private RegistrazioneImpl registrazioneService; // La classe da testare
 
+    /**
+     * Verifica che la registrazione di un cliente fallisca se l'email è già associata a un Operatore.
+     * Assicura che venga lanciata un'eccezione e che non avvenga alcun salvataggio nel database.
+     */
     @Test
     void emailInUso_operatore() {
         RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "pass", "pass");
@@ -52,6 +56,10 @@ class RegistrazioneServiceTest {
         verify(clienteRepository, never()).save(any());
     }
 
+    /**
+     * Verifica che la registrazione di un cliente fallisca se l'email è già registrata da un altro Cliente.
+     * Controlla l'integrità del messaggio di errore e l'assenza di chiamate al metodo save.
+     */
     @Test
     void emailInUso_cliente() {
         RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "pass", "pass");
@@ -68,6 +76,10 @@ class RegistrazioneServiceTest {
         verify(clienteRepository, never()).save(any());
     }
 
+    /**
+     * Verifica che la registrazione di un cliente fallisca se l'email è già utilizzata da un Gestore.
+     * Garantisce che il sistema impedisca la creazione di account duplicati tra diversi ruoli.
+     */
     @Test
     void emailInUso_gestore() {
         RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "pass", "pass");
@@ -84,6 +96,10 @@ class RegistrazioneServiceTest {
         verify(clienteRepository, never()).save(any());
     }
 
+    /**
+     * Verifica che il servizio di registrazione validi la corrispondenza tra password e conferma password.
+     * Il test si aspetta un'eccezione se le stringhe fornite nel DTO differiscono.
+     */
     @Test
     void testRegistrazione_PasswordsDiverse() {
         RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "pass1", "pass2");
@@ -98,6 +114,11 @@ class RegistrazioneServiceTest {
         verify(clienteRepository, never()).save(any());
     }
 
+    /**
+     * Testa il flusso completo di registrazione di un nuovo Cliente con dati validi.
+     * Verifica che la password venga criptata, che l'oggetto venga salvato correttamente
+     * e che il servizio restituisca le credenziali (UserDetails) del nuovo utente.
+     */
     @Test
     void testRegistrazioneCliente_Successo() {
         RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "password", "password");
@@ -118,6 +139,11 @@ class RegistrazioneServiceTest {
         verify(clienteRepository, times(1)).save(any(Cliente.class));
     }
 
+    /**
+     * Testa il corretto salvataggio di un profilo Operatore.
+     * Verifica che, dopo i controlli di disponibilità email, venga invocata la persistenza
+     * sul repository specifico degli operatori.
+     */
     @Test
     void testRegistrazioneOperatore_Successo() {
         RegistraUtenteDTO dto = new RegistraUtenteDTO("Mario", "Rossi", "mario@test.com", "password", "password");
