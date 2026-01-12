@@ -1,50 +1,72 @@
-function validateTicketForm(event) {
-    const form = event.target;
-    const titolo = form.querySelector('input[name="titolo"]').value.trim();
-    const descrizione = form.querySelector('textarea[name="descrizione"]').value.trim();
+function validaESalva() {
+    console.log("Funzione validaESalva chiamata"); // Verifica in console F12
+    const form = document.getElementById('ticketForm');
 
+    // Usiamo gli ID generati da th:field (solitamente coincidono col nome del campo)
+    const titoloField = document.getElementById('titolo');
+    const descrizioneField = document.getElementById('descrizione');
+    const fileInput = document.getElementById('file-hidden');
+
+    if (!titoloField || !descrizioneField) {
+        console.error("Errore: Campi non trovati nel DOM");
+        return;
+    }
+
+    const titolo = titoloField.value.trim();
+    const descrizione = descrizioneField.value.trim();
+
+    // 1. VALIDAZIONE TITOLO
     const titoloRegex = /^[a-zA-Z0-9À-ÿ '‘".,!?-]{5,100}$/;
-
     if (!titoloRegex.test(titolo)) {
-        event.preventDefault();
         Swal.fire({
             icon: 'error',
             title: 'Titolo non valido',
-            text: 'Il titolo deve avere tra i 5 e i 100 caratteri e non contenere simboli speciali non autorizzati.',
+            text: 'Il titolo deve avere tra i 5 e i 100 caratteri.',
             confirmButtonColor: '#4f46e5'
         });
-        return false;
+        return;
     }
 
+    // 2. VALIDAZIONE DESCRIZIONE
     if (descrizione.length === 0 || descrizione.length > 2000) {
-        event.preventDefault();
         Swal.fire({
             icon: 'error',
             title: 'Descrizione non valida',
-            text: 'La descrizione è obbligatoria e non può superare i 2000 caratteri.',
+            text: 'La descrizione è obbligatoria (max 2000 caratteri).',
             confirmButtonColor: '#4f46e5'
         });
-        return false;
+        return;
     }
 
-    return true;
+    // 3. VALIDAZIONE DIMENSIONE FILE (Anti-crash)
+    if (fileInput.files && fileInput.files.length > 0) {
+        const fileSize = fileInput.files[0].size / 1024 / 1024;
+        if (fileSize > 16) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File troppo grande',
+                text: 'L\'allegato supera il limite di 16MB.',
+                confirmButtonColor: '#4f46e5'
+            });
+            fileInput.value = "";
+            return;
+        }
+    }
+
+    if (fileInput.files && fileInput.files.length > 0) {
+        const fileName = fileInput.files[0].name;
+        const allowedExtensions = /(\.txt|\.jpg|\.jpeg|\.zip)$/i;
+        if (!allowedExtensions.exec(fileName)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Errore Allegato',
+                text: 'Il formato del file non è consentito.',
+                confirmButtonColor: '#4f46e5'
+            });
+            return; // Blocca l'invio
+        }
+    }
+    form.submit(); // Questo DEVE far partire la richiesta al controller
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('file-hidden');
-    const fileNameDisplay = document.getElementById('file-name-display');
-
-    if (fileInput) {
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files.length > 0) {
-                const fileName = this.files[0].name;
-                fileNameDisplay.textContent = fileName;
-                fileNameDisplay.classList.remove('text-gray-400');
-                fileNameDisplay.classList.add('text-indigo-600', 'font-bold');
-            } else {
-                fileNameDisplay.textContent = 'Nessun file selezionato';
-                fileNameDisplay.classList.add('text-gray-400');
-            }
-        });
-    }
-});
+// Keep the rest of your file name display logic below...

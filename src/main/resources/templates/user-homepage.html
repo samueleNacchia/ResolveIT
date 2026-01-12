@@ -197,8 +197,8 @@
     <div id="tab-new-ticket" class="tab-content">
       <div class="max-w-3xl mx-auto bg-white p-10 rounded-2xl shadow-sm border border-gray-100">
         <form id="ticketForm" th:action="@{/ticket/salva}" th:object="${ticketDTO}"
-              method="POST" enctype="multipart/form-data" class="space-y-6"
-              onsubmit="return validateTicketForm(event)">          <div>
+              method="POST" enctype="multipart/form-data" class="space-y-6">
+                  <div>
             <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Categoria</label>
             <select th:field="*{idCategoria}" class="input-custom" >
               <option th:each="cat : ${categorie}" th:value="${cat.ID_C}" th:text="${cat.nome}" th:if="${cat.getStato()}"> </option>>
@@ -208,15 +208,15 @@
           </div>
           <div>
             <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Titolo</label>
-            <input type="text" th:field="*{titolo}" class="input-custom">
+            <input type="text" th:field="*{titolo}" id="titolo" class="input-custom">
           </div>
           <div>
             <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Descrizione</label>
-            <textarea th:field="*{descrizione}" rows="5" class="input-custom resize-none"></textarea>
+            <textarea th:field="*{descrizione}" id="descrizione" rows="5" class="input-custom resize-none"></textarea>
           </div>
           <div class="flex justify-between items-center pt-4">
             <div class="relative flex items-center gap-4">
-              <input type="file" name="fileAllegato" id="file-hidden" class="hidden" accept=".txt,.jpg,.jpeg,.zip">
+              <input type="file" name="fileAllegato" id="file-hidden" class="hidden" accept=".txt,.jpg,.jpeg,.zip" onchange="checkFileSize(this)">
               <button type="button" onclick="document.getElementById('file-hidden').click()"
                       class="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl text-sm font-bold transition">
                 <i class="fa-solid fa-paperclip mr-2"></i> Allegato
@@ -225,7 +225,7 @@
               <span id="file-name-display" class="text-xs text-gray-400 italic">Nessun file selezionato</span>
             </div>
 
-            <button type="submit" class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">
+            <button type="button" onclick="validaESalva()" class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">
               Invia Ticket
             </button>
           </div>
