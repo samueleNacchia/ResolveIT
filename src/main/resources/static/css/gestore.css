@@ -1,28 +1,22 @@
 /* =========================================
-   1. RESET E LAYOUT PRINCIPALE (STICKY FOOTER)
+   1.  LAYOUT PRINCIPALE
    ========================================= */
-
-/* Rimuove margini e padding da TUTTO per evitare spazi bianchi indesiderati */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-
 html {
-    height: 100%;
+    min-height: 100%;
 }
 
 body {
-    /* Il body diventa un contenitore flessibile verticale */
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Occupa ALMENO tutta l'altezza dello schermo */
+    min-height: 100vh;
     font-family: 'Roboto', sans-serif;
     background-color: #ffffff;
-    overflow-x: hidden; /* Blocca lo scroll orizzontale */
 }
-
 /* =========================================
    2. HEADER & FOOTER (Gestione Flex)
    ========================================= */
@@ -41,34 +35,27 @@ footer {
 }
 
 /* =========================================
-   3. APP CONTAINER (Il cuore del layout)
+   3. APP CONTAINER (MODIFICATO)
    ========================================= */
 
-/* Questo div deve espandersi per riempire TUTTO lo spazio vuoto tra header e footer */
 .app-container {
-    display: flex; /* Dispone Sidebar e Main Content affiancati */
-    flex: 1;       /* MAGIA: Occupa tutto lo spazio verticale rimanente */
+    display: flex;
+    flex: 1;
     width: 100%;
     position: relative;
-    height: 100%;  /* Forza l'altezza a riempire il genitore (body) */
-}
-
+ }
 /* =========================================
-   4. SIDEBAR (Colonna Sinistra)
+   4. SIDEBAR
    ========================================= */
 .sidebar {
     width: 260px;
-    background-color: #f8f9fa; /* Grigio chiaro */
+    background-color: #f8f9fa;
     padding: 20px;
     display: flex;
     flex-direction: column;
     border-right: 1px solid #e0e0e0;
-
-    /* Impedisce alla sidebar di restringersi */
     flex-shrink: 0;
-
-    /* Assicura che la sidebar sia alta quanto il contenitore */
-    min-height: 100%;
+/
 }
 
 .logo-area { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
@@ -178,9 +165,61 @@ footer {
 .pill-actions { display: flex; align-items: center; gap: 10px; margin-left: 15px; }
 .divider { width: 1px; height: 18px; background-color: rgba(255, 255, 255, 0.4); }
 
-/* Form e Modale */
-.center-form { max-width: 500px; margin: 40px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
-.center-form input, .modal-input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
+/* Form e Modale *//* --- FORM CENTRALE (Aggiunta Operatore) --- */
+.center-form {
+    max-width: 450px; /* Ridotto per essere più proporzionato */
+    width: 100%;
+
+    /* CENTRATURA PERFETTA */
+    margin: auto; /* Questo centra il box sia verticalmente che orizzontalmente */
+
+    background: white;
+    padding: 35px; /* Spaziatura interna ridotta per eleganza */
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+
+    /* Assicuriamo che il contenuto sia impilato */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Titoli dei campi (Label) */
+.center-form h2 {
+    font-size: 0.95rem;
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 8px;
+    margin-top: 15px; /* Spazio sopra ogni campo */
+}
+
+/* Rimuove lo spazio extra sopra il primo campo */
+.center-form h2:first-of-type {
+    margin-top: 0;
+}
+
+/* Campi Input */
+.center-form input {
+    width: 100%;
+    padding: 10px 12px; /* Meno alti e più eleganti */
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border 0.3s;
+}
+
+.center-form input:focus {
+    border-color: #2b4eff;
+    outline: none;
+}
+
+/* Bottoni in basso */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+.modal-input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
 .form-actions, .modal-buttons { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; }
 .btn { padding: 10px 25px; border: none; border-radius: 25px; cursor: pointer; font-weight: 500; }
 .btn-primary { background-color: #2b4eff; color: white; }

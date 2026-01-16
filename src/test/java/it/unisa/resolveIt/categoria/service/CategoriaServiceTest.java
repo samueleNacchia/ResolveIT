@@ -13,9 +13,15 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+/**
+ * Test di Unità per la logica di business di {@link CategoriaImpl} e per l'entità {@link Categoria}.
+ * <p>
+ * Verifica i controlli sui duplicati, la validazione degli input, le transizioni di stato (abilita/disabilita)
+ * e la gestione delle eccezioni. Include anche test per garantire la copertura del codice dell'Entità Categoria.
+ * </p>
+ */
 @ExtendWith(MockitoExtension.class)
 class CategoriaServiceTest {
 
@@ -29,6 +35,10 @@ class CategoriaServiceTest {
     // PARTE 1: TEST DEL SERVICE (CategoriaImpl)
 
     // --- ADD CATEGORIA ---
+
+    /**
+     * Verifica che venga lanciata un'eccezione se si tenta di aggiungere una categoria con un ID già esistente.
+     */
     @Test
     void addCategoria_Fallimento_IdEsistente() {
         // Copre il primo ramo dell'OR: if (existsById(...) || ...)
@@ -41,6 +51,9 @@ class CategoriaServiceTest {
         verify(categoriaRepository, never()).save(any());
     }
 
+    /**
+     * Verifica che venga lanciata un'eccezione se si tenta di aggiungere una categoria con un nome già esistente.
+     */
     @Test
     void addCategoria_Fallimento_NomeEsistente() {
         // Copre il secondo ramo dell'OR
@@ -53,6 +66,9 @@ class CategoriaServiceTest {
         assertEquals("Categoria già presente nel database", ex.getMessage());
     }
 
+    /**
+     * Verifica il corretto salvataggio di una nuova categoria quando ID e nome non sono duplicati.
+     */
     @Test
     void addCategoria_Successo() {
         Categoria cat = new Categoria("Nuova", true);
@@ -65,11 +81,19 @@ class CategoriaServiceTest {
     }
 
     // --- UPDATE CATEGORIA ---
+
+    /**
+     * Verifica che venga lanciata un'eccezione se l'input per l'aggiornamento è null.
+     */
     @Test
     void updateCategoria_InputNull() {
         assertThrows(IllegalArgumentException.class, () -> categoriaService.updateCategoria(null));
     }
 
+    /**
+     * Verifica che venga lanciata un'eccezione se si tenta di aggiornare il nome di una categoria
+     * con uno già presente nel database.
+     */
     @Test
     void updateCategoria_NomeDuplicato() {
         Categoria input = new Categoria("Esistente", true);
@@ -79,6 +103,9 @@ class CategoriaServiceTest {
         assertThrows(IllegalArgumentException.class, () -> categoriaService.updateCategoria(input));
     }
 
+    /**
+     * Verifica che venga lanciata un'eccezione se si tenta di aggiornare una categoria non presente per ID.
+     */
     @Test
     void updateCategoria_NonTrovataById() {
         Categoria input = new Categoria("Valida", true);
@@ -89,6 +116,9 @@ class CategoriaServiceTest {
         assertThrows(RuntimeException.class, () -> categoriaService.updateCategoria(input));
     }
 
+    /**
+     * Verifica il corretto aggiornamento di una categoria esistente con dati validi.
+     */
     @Test
     void updateCategoria_Successo() {
         Categoria input = new Categoria("NuovoNome", true);
@@ -105,6 +135,10 @@ class CategoriaServiceTest {
     }
 
     // --- DISABLE CATEGORIA ---
+
+    /**
+     * Verifica la corretta disabilitazione di una categoria attiva.
+     */
     @Test
     void disableCategoria_Successo() {
         long id = 1L;
@@ -116,6 +150,9 @@ class CategoriaServiceTest {
         verify(categoriaRepository).save(cat);
     }
 
+    /**
+     * Verifica che venga lanciata un'eccezione se si tenta di disabilitare una categoria già disattiva.
+     */
     @Test
     void disableCategoria_GiaDisabilitata() {
         long id = 1L;
@@ -126,6 +163,9 @@ class CategoriaServiceTest {
         verify(categoriaRepository, never()).save(any());
     }
 
+    /**
+     * Verifica che venga lanciata un'eccezione se la categoria da disabilitare non viene trovata.
+     */
     @Test
     void disableCategoria_NonTrovata() {
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.empty());
@@ -133,6 +173,10 @@ class CategoriaServiceTest {
     }
 
     // --- ENABLE CATEGORIA ---
+
+    /**
+     * Verifica la corretta abilitazione di una categoria disattiva.
+     */
     @Test
     void enableCategoria_Successo() {
         long id = 1L;
@@ -144,6 +188,9 @@ class CategoriaServiceTest {
         verify(categoriaRepository).save(cat);
     }
 
+    /**
+     * Verifica che venga lanciata un'eccezione se si tenta di abilitare una categoria già attiva.
+     */
     @Test
     void enableCategoria_GiaAbilitata() {
         long id = 1L;
@@ -153,6 +200,9 @@ class CategoriaServiceTest {
         assertThrows(RuntimeException.class, () -> categoriaService.enableCategoria(id));
     }
 
+    /**
+     * Verifica che venga lanciata un'eccezione se la categoria da abilitare non viene trovata.
+     */
     @Test
     void enableCategoria_NonTrovata() {
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.empty());
@@ -162,7 +212,18 @@ class CategoriaServiceTest {
     // ===========================================================
     // PARTE 2: TEST DELL'ENTITY (Categoria.java)
 
-
+    /**
+     * Test completo sui metodi dell'entità {@link Categoria} per garantire la massima copertura del codice (Branch Coverage).
+     * <p>
+     * Verifica:
+     * <ul>
+     * <li>Il metodo <code>equals()</code> e <code>hashCode()</code> con vari scenari (stesso oggetto, null, classe diversa, campi diversi).</li>
+     * <li>Il metodo <code>toString()</code>.</li>
+     * <li>I metodi getter e setter.</li>
+     * <li>La logica interna booleana dei metodi <code>enable()</code> e <code>disable()</code> senza passare dal service.</li>
+     * </ul>
+     * </p>
+     */
     @Test
     void testEntityMethods_FullCoverage() {
         // Setup istanze

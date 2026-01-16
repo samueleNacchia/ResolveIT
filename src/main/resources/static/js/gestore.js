@@ -99,73 +99,70 @@
 
     /* --- GESTIONE POPUP AL CARICAMENTO --- */
     document.addEventListener("DOMContentLoaded", function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const sectionParam = urlParams.get('section');
+        const urlParams = new URLSearchParams(window.location.search);
+        const sectionParam = urlParams.get('section');
 
-    // Lettura parametri stato
-    const hasError = urlParams.has('error');
-    // Leggiamo il VALORE di success per distinguere true da false
-    const successValue = urlParams.get('success');
+        // Parametri URL
+        const hasError = urlParams.has('error');
+        const successValue = urlParams.get('success');
 
-    // 1. Logica Categorie
-    if (sectionParam === 'categories') {
-    showSection('categories');
+        // Recuperiamo il messaggio specifico dal server (se presente)
+        const serverMsgInput = document.getElementById('serverErrorMessage');
+        const serverMessage = serverMsgInput ? serverMsgInput.value : null;
 
-    if (hasError) {
-    Swal.fire({
-    icon: 'error',
-    title: 'Errore',
-    text: 'Impossibile salvare la categoria. Nome non valido o duplicato.',
-    confirmButtonColor: '#d33'
-});
-} else if (successValue !== null) { // Se c'è &success (qualunque valore)
-    Swal.fire({
-    icon: 'success',
-    title: 'Successo',
-    text: 'Operazione sulle categorie completata!',
-    timer: 2000,
-    showConfirmButton: false
-});
-}
+        /* --- 1. Logica Categorie --- */
+        if (sectionParam === 'categories') {
+            showSection('categories');
 
-    // 2. Logica Accounts (MODIFICATA)
-} else if (sectionParam === 'accounts') {
-    showSection('accounts');
+            if (hasError) {
+                Swal.fire({
+                    icon: 'error', title: 'Errore', text: 'Impossibile salvare la categoria.', confirmButtonColor: '#d33'
+                });
+            } else if (successValue !== null) {
+                Swal.fire({
+                    icon: 'success', title: 'Successo', text: 'Categorie aggiornate!', timer: 2000, showConfirmButton: false
+                });
+            }
 
-    // CASO SPECIFICO: success=false (es. Utente già esistente)
-    if (successValue === 'false') {
-    Swal.fire({
-    icon: 'error',
-    title: 'Operazione Fallita',
-    text: 'Impossibile registrare l\'operatore. L\'email potrebbe essere già in uso.',
-    confirmButtonColor: '#d33'
-});
-}
-    // CASO ERRORE GENERICO (&error)
-    else if (hasError) {
-    Swal.fire({
-    icon: 'error',
-    title: 'Errore',
-    text: 'Si è verificato un errore durante l\'operazione sull\'account.',
-    confirmButtonColor: '#d33'
-});
-}
-    // CASO SUCCESSO GENERICO (&success senza valore o =true)
-    else if (urlParams.has('success') && successValue !== 'false') {
-    Swal.fire({
-    icon: 'success',
-    title: 'Successo',
-    text: 'Account aggiornato correttamente!',
-    timer: 2000,
-    showConfirmButton: false
-});
-}
+            /* --- 2. Logica Accounts (AGGIORNATA) --- */
+        } else if (sectionParam === 'accounts') {
+            showSection('accounts');
 
-} else {
-    showSection('home');
-}
-});
+            // CASO ERRORE (success=false)
+            if (successValue === 'false') {
+                // Usiamo il messaggio del server se c'è, altrimenti uno generico
+                const msgText = serverMessage && serverMessage.trim() !== ""
+                    ? serverMessage
+                    : 'Impossibile registrare l\'operatore. Controlla i dati o se l\'email esiste già.';
 
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Operazione Fallita',
+                    text: msgText, // Qui apparirà "Email già presente" o "Password non coincidono"
+                    confirmButtonColor: '#d33'
+                });
+            }
+            // CASO SUCCESSO
+            else if (successValue === 'operatorCreated') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Operatore Creato',
+                    text: 'Il nuovo account operatore è attivo.',
+                    timer: 2500,
+                    showConfirmButton: false
+                });
+            }
+            // Altri successi (delete/disable)
+            else if (urlParams.has('success')) {
+                Swal.fire({
+                    icon: 'success', title: 'Successo', text: 'Operazione completata!', timer: 2000, showConfirmButton: false
+                });
+            }
+
+        } else {
+            showSection('home');
+        }
+    });
     /* --- FUNZIONE DI CONFERMA DISABILITAZIONE --- */
     function confirmDisable(id, tipoUtente) {
     const config = {

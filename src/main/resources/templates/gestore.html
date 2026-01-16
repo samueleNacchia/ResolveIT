@@ -18,7 +18,7 @@
 
 </head>
 <body>
-
+<input type="hidden" id="serverErrorMessage" th:value="${errorMessage}" />
 <div th:replace="~{fragments/header :: header-fragment}"></div>
 
 <div class="app-container">
@@ -122,18 +122,18 @@
 
                         <h2>Nome</h2>
                         <input type="text" id="opNome" name="nome" placeholder="Mario">
-                        <p id="errorOpNome" class="error-msg" style="display:none;">Nome non valido (2-30 caratteri, solo lettere).</p>
+                        <p id="errorOpNome" class="error-msg" style="display:none;">Nome non valido</p>
 
                         <h2>Cognome</h2>
                         <input type="text" id="opCognome" name="cognome" placeholder="Rossi">
-                        <p id="errorOpCognome" class="error-msg" style="display:none;">Cognome non valido (2-30 caratteri, solo lettere).</p>
+                        <p id="errorOpCognome" class="error-msg" style="display:none;">Cognome non valido</p>
 
                         <h2>Email</h2>
-                        <input type="email" id="opEmail" name="email" placeholder="marioRossi@gmail.com">
-                        <p id="errorOpEmail" class="error-msg" style="display:none;">Email non valida.</p>
+                        <input type="email" id="opEmail" name="email" placeholder="email@esempio.com">
+                        <p id="errorOpEmail" class="error-msg" style="display:none;">Email non valida</p>
 
-                        <input type="hidden" name="password" value="Defaultpwd">
-                        <input type="hidden" name="confermaPassword" value="Defaultpwd">
+                        <input type="hidden" name="password" value="DefaultPwd123!">
+                        <input type="hidden" name="confermaPassword" value="DefaultPwd123!">
 
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" onclick="toggleOperatorForm(false)">Annulla</button>

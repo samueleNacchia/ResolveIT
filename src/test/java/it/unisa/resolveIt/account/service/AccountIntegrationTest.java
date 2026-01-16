@@ -20,6 +20,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Classe di test di integrazione per i controller relativi alla gestione Account.
+ * <p>
+ * Verifica il flusso completo delle richieste HTTP:
+ * <ul>
+ * <li>Chiamate POST per rimuovere account (Gestore).</li>
+ * <li>Chiamate GET/POST per visualizzare e modificare il proprio profilo (Utente).</li>
+ * <li>Verifica dei redirect e dei parametri URL restituiti.</li>
+ * </ul>
+ * Il service {@link AccountImpl} è mockato per simulare successi ed eccezioni.
+ * </p>
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 public class AccountIntegrationTest {
@@ -32,6 +44,10 @@ public class AccountIntegrationTest {
 
     // --- TEST ACCOUNT CONTROLLER (Lato Gestore) ---
 
+    /**
+     * Verifica il comportamento del controller quando un Gestore rimuove un Cliente con successo.
+     * Atteso: Redirect a /gestore con parametro success.
+     */
     @Test
     public void removeAccountCliente_Successo() throws Exception {
         mockMvc.perform(post("/account/removeCliente")
@@ -42,8 +58,13 @@ public class AccountIntegrationTest {
                 .andExpect(redirectedUrl("/gestore?section=accounts&success"));
     }
 
+    /**
+     * Verifica il comportamento del controller quando si verifica un errore durante la rimozione di un Cliente.
+     * Atteso: Redirect a /gestore con parametro error.
+     */
     @Test
     public void removeAccountCliente_Eccezione() throws Exception {
+        // Simuliamo un errore nel service
         doThrow(new RuntimeException("Errore")).when(accountImpl).removeAccountCliente(1L);
 
         mockMvc.perform(post("/account/removeCliente")
@@ -54,6 +75,9 @@ public class AccountIntegrationTest {
                 .andExpect(redirectedUrl("/gestore?section=accounts&error"));
     }
 
+    /**
+     * Verifica il comportamento del controller quando un Gestore rimuove un Operatore con successo.
+     */
     @Test
     public void removeAccountOperatore_Successo() throws Exception {
         mockMvc.perform(post("/account/removeOperatore")
@@ -64,6 +88,9 @@ public class AccountIntegrationTest {
                 .andExpect(redirectedUrl("/gestore?section=accounts&success"));
     }
 
+    /**
+     * Verifica il comportamento del controller quando si verifica un errore durante la rimozione di un Operatore.
+     */
     @Test
     public void removeAccountOperatore_Eccezione() throws Exception {
         doThrow(new RuntimeException("Errore")).when(accountImpl).removeAccountOperatore(99L);
@@ -78,6 +105,9 @@ public class AccountIntegrationTest {
 
     // --- TEST MY PROFILE CONTROLLER ---
 
+    /**
+     * Verifica che la pagina "Il mio profilo" venga caricata correttamente con il DTO popolato.
+     */
     @Test
     public void showProfileForm_Successo() throws Exception {
         String email = "cliente@test.com";
@@ -93,18 +123,20 @@ public class AccountIntegrationTest {
                 .andExpect(model().attributeExists("utenteDTO"));
     }
 
-    // TEST DI BRANCH COVERAGE AGGIUNTI QUI SOTTO
-
+    /**
+     * Verifica la modifica del profilo senza cambio password (password vuota).
+     * Atteso: Redirect alla pagina profilo con messaggio di successo.
+     */
     @Test
     public void modifyUserAccount_PasswordVuota_Successo() throws Exception {
-        // Copre il ramo: if (dto.getPassword() != null && !dto.getPassword().isEmpty()) -> FALSE
+        // Mockiamo che il service ritorni false (password non cambiata)
         when(accountImpl.modifyUser(any(MyProfileDTO.class))).thenReturn(false);
 
         MyProfileDTO dto = new MyProfileDTO();
         dto.setNome("Luigi");
         dto.setCognome("Verdi");
         dto.setEmail("mail@test.com");
-        dto.setPassword(""); // Vuota
+        dto.setPassword("");
         dto.setConfermaPassword("");
 
         mockMvc.perform(post("/my-profile")
@@ -116,30 +148,35 @@ public class AccountIntegrationTest {
                 .andExpect(flash().attributeExists("successMessage"));
     }
 
+    /**
+     * Verifica che il controller rilevi la non corrispondenza delle password prima di chiamare il service.
+     * Atteso: Ritorna alla vista con errori di validazione nel Model.
+     */
     @Test
     public void modifyUserAccount_MismatchController() throws Exception {
-        // Copre il ramo: if (!dto.getPassword().equals(dto.getConfermaPassword())) -> TRUE
         MyProfileDTO dto = new MyProfileDTO();
         dto.setNome("Luigi");
         dto.setCognome("Verdi");
         dto.setEmail("mail@test.com");
         dto.setPassword("PasswordA123");
-        dto.setConfermaPassword("PasswordB123"); // Diverse
+        dto.setConfermaPassword("PasswordB123");
 
         mockMvc.perform(post("/my-profile")
                         .with(user("mail@test.com").roles("CLIENTE"))
                         .flashAttr("utenteDTO", dto)
                         .with(csrf()))
-                .andExpect(status().isOk()) // Rimane nella pagina
+                .andExpect(status().isOk())
                 .andExpect(view().name("my-profile"))
                 .andExpect(model().attributeHasFieldErrors("utenteDTO", "confermaPassword"));
     }
 
+    /**
+     * Verifica la validazione automatica del DTO (es. campi obbligatori o pattern regex).
+     */
     @Test
     public void modifyUserAccount_ValidazioneDTO_Fallita() throws Exception {
-        // Copre result.hasErrors() -> TRUE
         MyProfileDTO dtoErrato = new MyProfileDTO();
-        dtoErrato.setNome("Luigi123"); //
+        dtoErrato.setNome("Luigi123"); // Nome non valido (contiene numeri)
         dtoErrato.setCognome("Verdi");
         dtoErrato.setEmail("mail@test.com");
 
@@ -152,16 +189,20 @@ public class AccountIntegrationTest {
                 .andExpect(model().attributeHasFieldErrors("utenteDTO", "nome"));
     }
 
+    /**
+     * Verifica la modifica del profilo con cambio password avvenuto con successo.
+     * Atteso: Redirect al login per forzare la ri-autenticazione.
+     */
     @Test
     public void modifyUserAccount_Successo_PasswordChange() throws Exception {
-        // Copre if (passwordChanged) -> TRUE
+        // Mockiamo che il service ritorni true (password cambiata)
         when(accountImpl.modifyUser(any(MyProfileDTO.class))).thenReturn(true);
 
         MyProfileDTO dto = new MyProfileDTO();
         dto.setNome("Luigi");
         dto.setCognome("Verdi");
         dto.setEmail("mail@test.com");
-        dto.setPassword("NewPass123"); //
+        dto.setPassword("NewPass123");
         dto.setConfermaPassword("NewPass123");
 
         mockMvc.perform(post("/my-profile")
@@ -173,9 +214,12 @@ public class AccountIntegrationTest {
                 .andExpect(flash().attributeExists("passwordSuccess"));
     }
 
+    /**
+     * Verifica la gestione delle eccezioni lanciate dal service durante la modifica.
+     * Atteso: Ritorna alla vista con messaggio di errore.
+     */
     @Test
     public void modifyUserAccount_EccezioneService() throws Exception {
-        // Copre catch (Exception e)
         doThrow(new RuntimeException("Errore Critico")).when(accountImpl).modifyUser(any());
 
         MyProfileDTO dto = new MyProfileDTO();
@@ -192,43 +236,40 @@ public class AccountIntegrationTest {
                 .andExpect(model().attribute("errorMessage", "Errore Critico"));
     }
 
-    // --- TEST BRANCH COVERAGE CONTROLLER (INSTANCEOF) ---
+    // --- TEST DI AGGIORNAMENTO SESSIONE (INSTANCEOF CHECK) ---
 
+    /**
+     * Verifica che, se l'utente loggato è un Operatore e modifica il nome,
+     * l'oggetto UserDetails in sessione venga aggiornato senza logout.
+     */
     @Test
     public void modifyUserAccount_AggiornaSessione_Operatore() throws Exception {
-        // Branch: if (userDetails instanceof Operatore)
-
-        // 1. Creiamo un vero oggetto Operatore (che implementa UserDetails)
         Operatore opReale = new Operatore("VecchioNome", "Rossi", "op@test.com", "pass");
-
-        // 2. Mockiamo il service
         when(accountImpl.modifyUser(any(MyProfileDTO.class))).thenReturn(false);
 
         MyProfileDTO dto = new MyProfileDTO();
-        dto.setNome("NuovoNome"); // Questo nome deve finire nell'oggetto opReale
+        dto.setNome("NuovoNome");
         dto.setCognome("Rossi");
         dto.setEmail("op@test.com");
 
-        // 3. Eseguiamo la richiesta passando l'oggetto opReale direttamente a .with(user(...))
         mockMvc.perform(post("/my-profile")
                         .flashAttr("utenteDTO", dto)
-                        .with(user(opReale)) // <--- MODIFICA FONDAMENTALE: Passiamo l'oggetto reale qui
+                        .with(user(opReale))
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/my-profile")); // Ci aspettiamo torni al profilo, NON al login
+                .andExpect(redirectedUrl("/my-profile"));
 
-        // 4. Verifica che il controller abbia aggiornato l'oggetto in memoria
+        // Asserzione fondamentale: verifica che l'oggetto in memoria sia cambiato
         assertEquals("NuovoNome", opReale.getNome());
     }
 
+    /**
+     * Verifica che, se l'utente loggato è un Cliente e modifica il nome,
+     * l'oggetto UserDetails in sessione venga aggiornato senza logout.
+     */
     @Test
     public void modifyUserAccount_AggiornaSessione_Cliente() throws Exception {
-        // Branch: else if (userDetails instanceof Cliente)
-
-        // 1. Creiamo un vero oggetto Cliente
         Cliente cliReale = new Cliente("VecchioNome", "Verdi", "cli@test.com", "pass");
-
-        // 2. Mockiamo il service
         when(accountImpl.modifyUser(any(MyProfileDTO.class))).thenReturn(false);
 
         MyProfileDTO dto = new MyProfileDTO();
@@ -236,20 +277,22 @@ public class AccountIntegrationTest {
         dto.setCognome("Verdi");
         dto.setEmail("cli@test.com");
 
-        // 3. Eseguiamo la richiesta passando l'oggetto cliReale
         mockMvc.perform(post("/my-profile")
                         .flashAttr("utenteDTO", dto)
-                        .with(user(cliReale)) //
+                        .with(user(cliReale))
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/my-profile"));
 
-        // 4. Verifica che sia entrato nell'else if del Cliente
         assertEquals("NuovoNomeCli", cliReale.getNome());
     }
+
+    /**
+     * Verifica il comportamento con un utente generico (non Operatore né Cliente).
+     * Il test passa se non ci sono errori e avviene il redirect, anche se l'oggetto non viene aggiornato.
+     */
     @Test
     public void modifyUserAccount_AggiornaSessione_GenericUser() throws Exception {
-        // Branch: else finale (Né Operatore né Cliente)
         when(accountImpl.modifyUser(any(MyProfileDTO.class))).thenReturn(false);
 
         MyProfileDTO dto = new MyProfileDTO();
@@ -258,10 +301,9 @@ public class AccountIntegrationTest {
         dto.setEmail("generic@test.com");
 
         mockMvc.perform(post("/my-profile")
-                        .with(user("generic@test.com")) // Utente generico Spring
+                        .with(user("generic@test.com"))
                         .flashAttr("utenteDTO", dto)
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection());
-
     }
 }
