@@ -118,22 +118,21 @@
                 </div>
 
                 <div id="add-operator-form" class="hidden-section center-form">
-                    <form id="formOperatore" th:action="@{/registerOperator}" method="post" onsubmit="return validateOperatorForm()">
-
+                    <form id="formOperatore" th:action="@{/registerOperator}" th:object="${utenteDTO}" method="post" onsubmit="return validateOperatorForm()">
                         <h2>Nome</h2>
-                        <input type="text" id="opNome" name="nome" placeholder="Mario">
+                        <input type="text" id="opNome" th:field="*{nome}" placeholder="Mario">
                         <p id="errorOpNome" class="error-msg" style="display:none;">Nome non valido</p>
 
                         <h2>Cognome</h2>
-                        <input type="text" id="opCognome" name="cognome" placeholder="Rossi">
+                        <input type="text" id="opCognome" th:field="*{cognome}" placeholder="Rossi">
                         <p id="errorOpCognome" class="error-msg" style="display:none;">Cognome non valido</p>
 
                         <h2>Email</h2>
-                        <input type="email" id="opEmail" name="email" placeholder="email@esempio.com">
+                        <input type="email" id="opEmail" th:field="*{email}" placeholder="email@esempio.com">
                         <p id="errorOpEmail" class="error-msg" style="display:none;">Email non valida</p>
 
-                        <input type="hidden" name="password" value="DefaultPwd123!">
-                        <input type="hidden" name="confermaPassword" value="DefaultPwd123!">
+                        <input type="hidden" th:field="*{password}" value="DefaultPwd123!">
+                        <input type="hidden" th:field="*{confermaPassword}" value="DefaultPwd123!">
 
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" onclick="toggleOperatorForm(false)">Annulla</button>

@@ -14,7 +14,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class RegistrazioneController {
@@ -63,35 +62,6 @@ public class RegistrazioneController {
             //Errore logico (errore del service)
             model.addAttribute("errorMessage", e.getMessage());
             return "registrazione";
-        }
-    }
-
-    @PostMapping("/registerOperator")
-    public String registerOperatorController(@Valid @ModelAttribute("utenteDTO") RegistraUtenteDTO dto, BindingResult result, Model model, HttpServletRequest request, RedirectAttributes redirectAttributes) {
-
-
-        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
-            if (!dto.getPassword().equals(dto.getConfermaPassword())) {
-                // Aggiungiamo l'errore SOLO al campo confermaPassword
-                result.rejectValue("confermaPassword", "error.match", "Le password non coincidono");
-            }
-        }
-
-        //Controllo validazione formale (es. campi vuoti)
-        if (result.hasErrors()) {
-            return "redirect:/gestore?section=accounts&success=false";
-        }
-
-        try {
-            // Logica per il Gestore che crea un Operatore
-            registrazioneService.registerOperator(dto);
-            redirectAttributes.addFlashAttribute("successMessage", "Operatore creato con successo!");
-            return "redirect:/gestore?section=accounts&success=operatorCreated";
-
-        } catch (Exception e) {
-            //Errore logico (errore del service)
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/gestore?section=accounts&success=false";
         }
     }
 
