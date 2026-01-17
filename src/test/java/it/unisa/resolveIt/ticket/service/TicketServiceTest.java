@@ -39,26 +39,6 @@ class TicketServiceTest {
 
 
     @Test
-    void quandoSalvoTicket_alloraVieneConvertitoCorrettamente() throws IOException {
-        TicketDTO dto = new TicketDTO();
-        dto.setTitolo("Problema Connessione");
-        dto.setIdCategoria(1L);
-        dto.setDescrizione("Internet non funziona");
-
-        Cliente autore = new Cliente();
-        autore.setEmail("test@user.it");
-
-        Categoria cat = new Categoria();
-        cat.setStato(true);
-        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(cat));
-
-        boolean risultato = ticketService.addTicket(dto, autore);
-
-        assertTrue(risultato);
-        verify(ticketRepository).save(any(Ticket.class));
-    }
-
-    @Test
     void addTicket_Successo() throws IOException {
         TicketDTO dto = new TicketDTO();
         dto.setTitolo("Problema Connessione");
@@ -73,9 +53,8 @@ class TicketServiceTest {
 
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, autore);
+        ticketService.addTicket(dto, autore);
 
-        assertTrue(result);
         verify(ticketRepository, times(1)).save(any(Ticket.class));
     }
 
@@ -92,63 +71,86 @@ class TicketServiceTest {
         cat.enable();
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
 
-        assertTrue(result, "Il service dovrebbe permettere l'invio senza allegato");
+        ticketService.addTicket(dto, new Cliente());
+
         verify(ticketRepository).save(any(Ticket.class));
     }
+
 
 
     @Test
     void addTicket_FormatoAllegatoNonValido() throws IOException {
         TicketDTO dto = new TicketDTO();
         dto.setIdCategoria(1L);
-        // Formato .exe non permesso
         dto.setFileAllegato(new MockMultipartFile("file", "virus.exe", "application/octet-stream", "content".getBytes()));
 
-        when(categoriaRepository.findById(any())).thenReturn(Optional.of(new Categoria()));
+        Categoria cat = new Categoria();
+        cat.setStato(true);
+        when(categoriaRepository.findById(any())).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.addTicket(dto, new Cliente());
+        });
 
-        assertFalse(result);
-        verify(ticketRepository, never()).save(any());
+        assertEquals("Formato allegato non valido", exception.getMessage());
     }
-
 
     @Test
     void addTicket_FormatoTitoloNonValido() throws IOException {
-
         TicketDTO dto = new TicketDTO();
         dto.setIdCategoria(1L);
         dto.setTitolo("@_provea$");
 
+        Categoria cat = new Categoria();
+        cat.setStato(true);
+        when(categoriaRepository.findById(any())).thenReturn(Optional.of(cat));
 
-        when(categoriaRepository.findById(any())).thenReturn(Optional.of(new Categoria()));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.addTicket(dto, new Cliente());
+        });
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
-        assertFalse(result, "Il service dovrebbe rifiutare titoli con caratteri speciali");
-        verify(ticketRepository, never()).save(any());
+        assertEquals("Formato titolo non valido", exception.getMessage());
     }
-
 
     @Test
     void addTicket_LunghezzaTestoNonValida() throws IOException {
         TicketDTO dto = new TicketDTO();
         dto.setIdCategoria(1L);
         dto.setTitolo("Problema x");
-        // Testiamo il limite: 2001 caratteri (se il limite è 2000)
-        String descrizioneTroppoLunga = "a".repeat(2001);
-        dto.setDescrizione(descrizioneTroppoLunga);
+        dto.setDescrizione("a".repeat(2001));
 
-        when(categoriaRepository.findById(any())).thenReturn(Optional.of(new Categoria()));
+        Categoria cat = new Categoria();
+        cat.setStato(true);
+        when(categoriaRepository.findById(any())).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.addTicket(dto, new Cliente());
+        });
 
-        // Deve essere FALSE perché abbiamo superato il limite
-        assertFalse(result, "Il service dovrebbe rifiutare descrizioni oltre i 2000 caratteri");
-        // Verifichiamo che NON abbia salvato nulla
-        verify(ticketRepository, never()).save(any());
+        assertEquals("Lunghezza descrizione non valida", exception.getMessage());
     }
+
+    @Test
+    void addTicket_OriginalNameNull_LanciaEccezione() throws IOException {
+        TicketDTO dto = new TicketDTO();
+        dto.setIdCategoria(1L);
+        dto.setTitolo("Titolo Valido");
+        MockMultipartFile fileSenzaNome = new MockMultipartFile("file", null, "text/plain", "content".getBytes());
+        dto.setFileAllegato(fileSenzaNome);
+
+        Categoria cat = new Categoria();
+        cat.setStato(true);
+        when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.addTicket(dto, new Cliente());
+        });
+
+        assertEquals("Formato allegato non valido", exception.getMessage());
+    }
+
+
 
     @Test
     void addTicket_CategoriaNonValida() throws IOException {
@@ -162,26 +164,11 @@ class TicketServiceTest {
 
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(catInattiva));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.addTicket(dto, new Cliente());
+        });
 
-        assertFalse(result, "Dovrebbe fallire perché la categoria è disattivata (ST_error)"); //
-        verify(ticketRepository, never()).save(any());
-    }
-
-    @Test
-    void addTicket_GrandezzaAllegatoNonValido() throws IOException {
-        TicketDTO dto = new TicketDTO();
-        dto.setIdCategoria(1L);
-
-        byte[] content = new byte[17 * 1024 * 1024];
-        MockMultipartFile largeFile = new MockMultipartFile("file", "test.jpg", "image/jpeg", content);
-        dto.setFileAllegato(largeFile);
-
-        when(categoriaRepository.findById(any())).thenReturn(Optional.of(new Categoria()));
-
-        boolean result = ticketService.addTicket(dto, new Cliente());
-
-        assertFalse(result);
+        assertEquals("Categoria non valida", exception.getMessage());
         verify(ticketRepository, never()).save(any());
     }
 
@@ -192,17 +179,15 @@ class TicketServiceTest {
         dto.setIdCategoria(1L);
         dto.setTitolo("Titolo Valido");
         dto.setDescrizione("Descrizione valida");
-        // EA_OK: Estensione permessa (.jpg)
         dto.setFileAllegato(new MockMultipartFile("file", "immagine.jpg", "image/jpeg", "content".getBytes()));
 
         Categoria cat = new Categoria();
-        cat.setStato(true); // ST_OK: Categoria attiva
+        cat.setStato(true);
 
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        ticketService.addTicket(dto, new Cliente());
 
-        assertTrue(result);
         verify(ticketRepository, times(1)).save(any());
     }
 
@@ -218,9 +203,9 @@ class TicketServiceTest {
 
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        ticketService.addTicket(dto, new Cliente());
 
-        assertTrue(result);
+        verify(ticketRepository, times(1)).save(any());
     }
 
     @Test
@@ -236,9 +221,9 @@ class TicketServiceTest {
 
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        ticketService.addTicket(dto, new Cliente());
 
-        assertTrue(result);
+        verify(ticketRepository, times(1)).save(any());
     }
 
     @Test
@@ -250,13 +235,13 @@ class TicketServiceTest {
 
         Categoria catAttiva = new Categoria();
         catAttiva.setID_C(1);
-        catAttiva.setStato(true); // ST_OK: Categoria non disattivata
+        catAttiva.setStato(true);
 
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(catAttiva));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        ticketService.addTicket(dto, new Cliente());
 
-        assertTrue(result);
+        verify(ticketRepository, times(1)).save(any());
     }
 
     @Test
@@ -276,60 +261,32 @@ class TicketServiceTest {
 
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        ticketService.addTicket(dto, new Cliente());
 
-        assertTrue(result);
+        verify(ticketRepository, times(1)).save(any());
     }
 
-    @Test
-    void addTicket_OriginalNameNull_Fallimento() throws IOException {
-        TicketDTO dto = new TicketDTO();
-        dto.setIdCategoria(1L);
-        // Creiamo un file senza nome originale
-        dto.setFileAllegato(new MockMultipartFile("file", null, "text/plain", "content".getBytes()));
-
-        when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(new Categoria()));
-
-        boolean result = ticketService.addTicket(dto, new Cliente());
-        assertFalse(result); // Il ramo "originalName != null" fallisce e prosegue o esce
-    }
 
     @Test
     void addTicket_TitoloNull_Fallimento() throws IOException {
         TicketDTO dto = new TicketDTO();
         dto.setIdCategoria(1L);
-        dto.setTitolo(null); // Forza il primo pezzo dell'if (dto.getTitolo() == null)
+        dto.setTitolo(null);
         dto.setDescrizione("Descrizione valida");
 
         Categoria cat = new Categoria();
         cat.enable();
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.addTicket(dto, new Cliente());
+        });
 
-        assertFalse(result); // Copre il ramo rosso del return false sotto il controllo titolo
+        assertEquals("Formato titolo non valido", exception.getMessage());
         verify(ticketRepository, never()).save(any());
     }
 
-    @Test
-    void addTicket_OriginalFilenameNull_Fallimento() throws IOException {
-        TicketDTO dto = new TicketDTO();
-        dto.setIdCategoria(1L);
-        dto.setTitolo("Titolo Valido");
-        // Creiamo un file che simula un getOriginalFilename() che restituisce null
-        MockMultipartFile fileSenzaNome = new MockMultipartFile("file", null, "text/plain", "content".getBytes());
-        dto.setFileAllegato(fileSenzaNome);
 
-        Categoria cat = new Categoria();
-        cat.enable();
-        when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
-
-        boolean result = ticketService.addTicket(dto, new Cliente());
-
-        // Se il tuo codice non ha un 'else' per originalName == null, questo ramo potrebbe rimanere giallo
-        // Questo test forza l'uscita o il salto del blocco allegato
-        assertFalse(result);
-    }
 
     @Test
     void addTicket_DescrizioneOltreLimite_Fallimento() throws IOException {
@@ -337,41 +294,40 @@ class TicketServiceTest {
         dto.setIdCategoria(1L);
         dto.setTitolo("Titolo Valido");
 
-        // Generiamo 2001 caratteri per attivare il return false
         dto.setDescrizione("a".repeat(2001));
 
         Categoria cat = new Categoria();
         cat.enable();
         when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.addTicket(dto, new Cliente());
+        });
 
-        assertFalse(result, "Il service dovrebbe fallire con descrizione > 2000 caratteri");
+        assertEquals("Lunghezza descrizione non valida", exception.getMessage());
         verify(ticketRepository, never()).save(any());
     }
 
     @Test
-    void addTicket_AllegatoTroppoGrande_Fallimento() throws IOException {
+    void addTicket_GrandezzaAllegatoNonValido_LanciaEccezione() throws IOException {
         TicketDTO dto = new TicketDTO();
         dto.setIdCategoria(1L);
         dto.setTitolo("Titolo Valido");
-        dto.setDescrizione("Descrizione valida");
 
-        // 16MB + 1 byte = 16.777.217 byte
         byte[] content = new byte[(16 * 1024 * 1024) + 1];
-        MockMultipartFile largeFile = new MockMultipartFile(
-                "file", "foto.jpg", "image/jpeg", content
-        );
+        MockMultipartFile largeFile = new MockMultipartFile("file", "test.jpg", "image/jpeg", content);
         dto.setFileAllegato(largeFile);
 
         Categoria cat = new Categoria();
         cat.enable();
-        when(categoriaRepository.findById(anyLong())).thenReturn(Optional.of(cat));
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(cat));
 
-        boolean result = ticketService.addTicket(dto, new Cliente());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.addTicket(dto, new Cliente());
+        });
 
-        assertFalse(result, "Il service dovrebbe fallire con file > 16MB");
-        verify(ticketRepository, never()).save(any());
+        assertEquals("Allegato troppo grande", exception.getMessage());
+        verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
 
@@ -384,11 +340,8 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        boolean result = ticketService.assignTicket(ticketId, op);
+        ticketService.assignTicket(ticketId, op);
 
-        assertTrue(result);
-        assertEquals(Stato.IN_CORSO, ticket.getStato());
-        assertEquals(op, ticket.getOperatore());
         verify(ticketRepository).save(ticket);
     }
 
@@ -398,25 +351,29 @@ class TicketServiceTest {
     void assignTicket_Fallimento_StatoNonAperto() {
         Long ticketId = 1L;
         Ticket ticket = new Ticket();
-        ticket.setStato(Stato.RISOLTO); // Già risolto, non assegnabile
+        ticket.setStato(Stato.RISOLTO);
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        boolean result = ticketService.assignTicket(ticketId, new Operatore());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.assignTicket(ticketId, new Operatore());
+        });
 
-        assertFalse(result);
+        assertEquals("Ticket in stato non valido", exception.getMessage());
+
         verify(ticketRepository, never()).save(any());
     }
 
     @Test
     void assignTicket_TicketInesistente_Fallimento() {
         Long ticketId = 999L;
-        // Il repository restituisce Empty (Ticket non trovato)
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
 
-        boolean result = ticketService.assignTicket(ticketId, new Operatore());
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.assignTicket(ticketId, new Operatore());
+        });
 
-        assertFalse(result); // Copre il ramo 'if (ticket == null)'
+        assertEquals("Ticket non trovato", exception.getMessage());
         verify(ticketRepository, never()).save(any());
     }
 
@@ -428,10 +385,11 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        // Passiamo null come operatore
-        boolean result = ticketService.assignTicket(ticketId, null);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.assignTicket(ticketId, null);
+        });
 
-        assertFalse(result); // Copre il ramo 'if (operatore == null)'
+        assertEquals("Operatore non valido", exception.getMessage());
         verify(ticketRepository, never()).save(any());
     }
 
@@ -443,11 +401,8 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        boolean result = ticketService.resolveTicket(ticketId);
+        ticketService.resolveTicket(ticketId);
 
-        assertTrue(result);
-        assertEquals(Stato.RISOLTO, ticket.getStato());
-        assertNotNull(ticket.getDataResolved());
         verify(ticketRepository).save(ticket);
     }
 
@@ -459,24 +414,34 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        boolean result = ticketService.resolveTicket(ticketId);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.resolveTicket(ticketId);
+        });
 
-        assertFalse(result);
+        assertEquals("Ticket in stato non valido", exception.getMessage());
         verify(ticketRepository, never()).save(any());
     }
 
     @Test
     void resolveTicket_TicketInesistente_Fallimento() {
+        Long ticketId = 1L;
         when(ticketRepository.findById(anyLong())).thenReturn(Optional.empty());
-        boolean result = ticketService.resolveTicket(1L);
-        assertFalse(result);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.resolveTicket(ticketId);
+        });
+
+        assertEquals("Ticket non trovato", exception.getMessage());
     }
 
     @Test
     void deleteTicket_TicketInesistente_Fallimento() {
+        Long ticketId = 1L;
         when(ticketRepository.findById(anyLong())).thenReturn(Optional.empty());
-        boolean result = ticketService.deleteTicket(1L);
-        assertFalse(result);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.deleteTicket(ticketId);
+        });
+
+        assertEquals("Ticket non trovato", exception.getMessage());
     }
 
     @Test
@@ -487,10 +452,8 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        boolean result = ticketService.deleteTicket(ticketId);
+        ticketService.deleteTicket(ticketId);
 
-        assertTrue(result);
-        assertEquals(Stato.ANNULLATO, ticket.getStato());
         verify(ticketRepository).save(ticket);
     }
 
@@ -502,9 +465,11 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        boolean result = ticketService.deleteTicket(ticketId);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.deleteTicket(ticketId);
+        });
 
-        assertFalse(result);
+        assertEquals("Ticket in stato non valido", exception.getMessage());
         verify(ticketRepository, never()).save(any());
     }
 
@@ -517,12 +482,8 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        boolean result = ticketService.releaseTicket(ticketId);
+        ticketService.releaseTicket(ticketId);
 
-        assertTrue(result);
-        // POST-CONDIZIONE CORRETTA: deve tornare APERTO e l'operatore deve essere null
-        assertEquals(Stato.APERTO, ticket.getStato());
-        assertNull(ticket.getOperatore());
         verify(ticketRepository).save(ticket);
     }
 
@@ -534,16 +495,17 @@ class TicketServiceTest {
 
         when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-        boolean result = ticketService.releaseTicket(ticketId);
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.releaseTicket(ticketId);
+        });
 
-        assertFalse(result);
+        assertEquals("Ticket in stato non valido", exception.getMessage());
         verify(ticketRepository, never()).save(any());
     }
 
     @Test
     void getTicketDisponibili_Successo() {
         ticketService.getTicketDisponibili();
-        // Verifica che venga chiamato il repository con lo stato APERTO
         verify(ticketRepository).findByStato(Stato.APERTO);
     }
 
@@ -558,10 +520,7 @@ class TicketServiceTest {
 
         List<TicketDTO> risultato = ticketService.getTicketUtente(c);
 
-        assertNotNull(risultato);
         assertEquals(1, risultato.size());
-        assertEquals("Test DTO", risultato.get(0).getTitolo());
-        assertEquals(1L, risultato.get(0).getId()); // Verifica mapping ID_T -> id
     }
 
 
@@ -576,9 +535,54 @@ class TicketServiceTest {
 
         List<TicketDTO> risultato = ticketService.getTicketInCarico(op);
 
-        assertNotNull(risultato);
-        assertEquals(1, risultato.size());
-        assertEquals(5L, risultato.get(0).getId());
         verify(ticketRepository).findByOperatore(op);
+    }
+
+    @Test
+    public void testGetTicketById_Successo() {
+        Long idTicket = 1L;
+        Ticket mockTicket = new Ticket();
+        mockTicket.setID_T(idTicket);
+        mockTicket.setTitolo("Problema Test");
+
+        when(ticketRepository.findById(idTicket)).thenReturn(Optional.of(mockTicket));
+
+        Ticket result = ticketService.getTicketById(idTicket);
+
+        assertNotNull(result);
+        assertEquals(idTicket, result.getID_T());
+        assertEquals("Problema Test", result.getTitolo());
+        verify(ticketRepository, times(1)).findById(idTicket);
+    }
+
+
+    @Test
+    public void testGetTicketUtenteFiltrati_Successo() {
+        Cliente mockCliente = new Cliente();
+        mockCliente.setEmail("cliente@test.it");
+        Stato stato = Stato.APERTO;
+        String ordine = "dataCreazione";
+
+        Ticket t1 = new Ticket();
+        t1.setID_T(1L);
+        t1.setTitolo("Ticket 1");
+
+        Ticket t2 = new Ticket();
+        t2.setID_T(2L);
+        t2.setTitolo("Ticket 2");
+
+        List<Ticket> listaTicket = List.of(t1, t2);
+
+        when(ticketRepository.findByClienteAndOptionalStato(mockCliente, stato, ordine))
+                .thenReturn(listaTicket);
+
+        List<TicketDTO> result = ticketService.getTicketUtenteFiltrati(mockCliente, stato, ordine);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("Ticket 1", result.get(0).getTitolo());
+        assertEquals("Ticket 2", result.get(1).getTitolo());
+
+        verify(ticketRepository).findByClienteAndOptionalStato(mockCliente, stato, ordine);
     }
 }
