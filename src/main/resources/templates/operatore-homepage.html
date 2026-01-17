@@ -86,7 +86,7 @@
         <h1 id="tab-title" class="text-4xl font-bold text-slate-800 text-center mb-10">Ticket in Carico</h1>
 
         <div id="tab-working" class="tab-content active">
-            <div class="card-table">
+            <div class="card-table" th:if="${not #lists.isEmpty(listaLavoro)}">
                 <table class="w-full text-left">
                     <thead class="table-head">
                     <tr>
@@ -153,10 +153,17 @@
                     </tbody>
                 </table>
             </div>
+
+            <div th:if="${#lists.isEmpty(listaLavoro)}" class="max-w-6xl mx-auto py-20 bg-white rounded-2xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-center">
+                <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-folder-open text-gray-300 text-3xl"></i>
+                </div>
+                <h3 class="text-gray-900 font-bold text-xl">Nessun ticket a tuo carico</h3>
+            </div>
         </div>
 
         <div id="tab-assign" class="tab-content">
-            <div class="card-table">
+            <div class="card-table" th:if="${not #lists.isEmpty(listaAttesa)}">
                 <table class="w-full text-left">
                     <thead class="table-head">
                     <tr>
@@ -199,6 +206,13 @@
                     </th:block>
                     </tbody>
                 </table>
+            </div>
+
+            <div th:if="${#lists.isEmpty(listaAttesa)}" class="max-w-6xl mx-auto py-20 bg-white rounded-2xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-center">
+                <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-folder-open text-gray-300 text-3xl"></i>
+                </div>
+                <h3 class="text-gray-900 font-bold text-xl">Nessun ticket in attesa di assegnazione</h3>
             </div>
         </div>
 

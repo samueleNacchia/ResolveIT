@@ -11,8 +11,9 @@
   <link rel="stylesheet" th:href="@{/css/footer.css}">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script th:src="@{/js/ticket-actions.js}"></script>
   <script th:src="@{/js/ticket-validation.js}"></script>
+  <script th:src="@{/js/ticket-actions.js}"></script>
+
 
   <style type="text/tailwindcss">
     @layer components {
@@ -134,7 +135,7 @@
       </div>
 
 
-      <div class="card-dashboard">
+      <div class="card-dashboard" th:if="${not #lists.isEmpty(lista)}">
         <table class="w-full text-left">
           <thead class="table-head">
           <tr>
@@ -192,6 +193,15 @@
           </tbody>
         </table>
       </div>
+
+      <div th:if="${#lists.isEmpty(lista)}" class="max-w-6xl mx-auto py-20 bg-white rounded-2xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-center">
+        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+          <i class="fa-solid fa-folder-open text-gray-300 text-3xl"></i>
+        </div>
+        <h3 class="text-gray-900 font-bold text-xl">Nessun ticket trovato</h3>
+        <p class="text-gray-400 text-sm mt-1">Non ci sono ticket che corrispondono ai filtri selezionati.</p>
+      </div>
+
     </div>
 
     <div id="tab-new-ticket" class="tab-content">
@@ -206,37 +216,81 @@
               </option>
             </select>
           </div>
+
           <div>
             <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Titolo</label>
-            <input type="text" th:field="*{titolo}" id="titolo" class="input-custom">
+            <input type="text" th:field="*{titolo}" id="titolo" class="input-custom" placeholder="Problemi di connessione"
+                   th:classappend="${#fields.hasErrors('titolo')} ? 'border-red-500' : 'border-gray-200'">
+            <p th:if="${#fields.hasErrors('titolo')}"
+               th:text="${#fields.errors('titolo')[0]}"
+               class="text-red-500 text-[10px] mt-1 font-bold"
+               id="error-titolo"></p>
           </div>
+
           <div>
             <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Descrizione</label>
-            <textarea th:field="*{descrizione}" id="descrizione" rows="5" class="input-custom resize-none"></textarea>
+            <textarea th:field="*{descrizione}" id="descrizione" rows="5" class="input-custom resize-none" placeholder="Il pc non si connette alla rete internet locale"
+                      th:classappend="${#fields.hasErrors('descrizione')} ? 'border-red-500' : 'border-gray-200'"></textarea>
+            <p th:if="${#fields.hasErrors('descrizione')}"
+               th:text="${#fields.errors('descrizione')[0]}"
+               class="text-red-500 text-[10px] mt-1 font-bold"
+               id="error-descrizione"></p>
           </div>
-          <div class="flex justify-between items-center pt-4">
+
+
+          <div class="flex flex-col gap-2 pt-4"> <div class="flex justify-between items-center">
             <div class="relative flex items-center gap-4">
-              <input type="file" name="fileAllegato" id="file-hidden" class="hidden" accept=".txt,.jpg,.jpeg,.zip" onchange="checkFileSize(this)">
+              <input type="file" th:field="*{fileAllegato}" id="file-hidden" class="hidden"
+                     accept=".txt,.jpg,.jpeg,.zip" onchange="checkFileSize(this)">
+
               <button type="button" onclick="document.getElementById('file-hidden').click()"
                       class="bg-gray-100 hover:bg-gray-200 px-6 py-3 rounded-xl text-sm font-bold transition">
                 <i class="fa-solid fa-paperclip mr-2"></i> Allegato
               </button>
 
-              <span id="file-name-display" class="text-xs text-gray-400 italic">Nessun file selezionato</span>
+              <div class="flex items-center gap-2">
+                <span id="file-name-display" class="text-xs text-gray-400 italic">Nessun file selezionato</span>
+
+                <button type="button" id="remove-file-btn" onclick="removeAttachment()"
+                        class="hidden text-red-500 hover:text-red-700 transition-colors focus:outline-none"
+                        title="Rimuovi allegato">
+                  <i class="fa-solid fa-circle-xmark"></i>
+                </button>
+              </div>
             </div>
 
-            <button type="button" onclick="validaESalva()" class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">
+            <button type="submit" id="submit-btn"
+                    class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">
               Invia Ticket
             </button>
+          </div>
+
+            <div class="flex flex-col">
+              <p th:if="${#fields.hasErrors('fileAllegato')}"
+                 th:text="${#fields.errors('fileAllegato')[0]}"
+                 class="text-red-500 text-[10px] font-bold mt-1"></p>
+
+              <p id="file-error-js" class="text-red-500 text-[10px] font-bold mt-1"></p>
+            </div>
+
           </div>
         </form>
       </div>
     </div>
+
   </main>
 </div>
 
 <footer th:replace="~{fragments/footer :: footer-fragment}"></footer>
 
+<script th:inline="javascript">
+  document.addEventListener("DOMContentLoaded", function() {
+      const tabToOpen = [[${openTab}]];
+      if (tabToOpen) {
+          switchTab(tabToOpen);
+      }
+  });
+</script>
 
 </body>
 </html>

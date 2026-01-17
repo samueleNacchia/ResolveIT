@@ -1,72 +1,55 @@
-function validaESalva() {
-    console.log("Funzione validaESalva chiamata"); // Verifica in console F12
-    const form = document.getElementById('ticketForm');
+function checkFileSize(input) {
+    const errorJs = document.getElementById('file-error-js');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const removeBtn = document.getElementById('remove-file-btn');
 
-    // Usiamo gli ID generati da th:field (solitamente coincidono col nome del campo)
-    const titoloField = document.getElementById('titolo');
-    const descrizioneField = document.getElementById('descrizione');
-    const fileInput = document.getElementById('file-hidden');
+    if (errorJs) errorJs.innerText = "";
 
-    if (!titoloField || !descrizioneField) {
-        console.error("Errore: Campi non trovati nel DOM");
-        return;
-    }
-
-    const titolo = titoloField.value.trim();
-    const descrizione = descrizioneField.value.trim();
-
-    // 1. VALIDAZIONE TITOLO
-    const titoloRegex = /^[a-zA-Z0-9À-ÿ '‘".,!?-]{5,100}$/;
-    if (!titoloRegex.test(titolo)) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Titolo non valido',
-            text: 'Il titolo deve avere tra i 5 e i 100 caratteri.',
-            confirmButtonColor: '#4f46e5'
-        });
-        return;
-    }
-
-    // 2. VALIDAZIONE DESCRIZIONE
-    if (descrizione.length === 0 || descrizione.length > 2000) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Descrizione non valida',
-            text: 'La descrizione è obbligatoria (max 2000 caratteri).',
-            confirmButtonColor: '#4f46e5'
-        });
-        return;
-    }
-
-    // 3. VALIDAZIONE DIMENSIONE FILE (Anti-crash)
-    if (fileInput.files && fileInput.files.length > 0) {
-        const fileSize = fileInput.files[0].size / 1024 / 1024;
-        if (fileSize > 16) {
-            Swal.fire({
-                icon: 'error',
-                title: 'File troppo grande',
-                text: 'L\'allegato supera il limite di 16MB.',
-                confirmButtonColor: '#4f46e5'
-            });
-            fileInput.value = "";
-            return;
-        }
-    }
-
-    if (fileInput.files && fileInput.files.length > 0) {
-        const fileName = fileInput.files[0].name;
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const fileSizeMB = file.size / (1024 * 1024);
         const allowedExtensions = /(\.txt|\.jpg|\.jpeg|\.zip)$/i;
-        if (!allowedExtensions.exec(fileName)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Errore Allegato',
-                text: 'Il formato del file non è consentito.',
-                confirmButtonColor: '#4f46e5'
-            });
-            return; // Blocca l'invio
+
+        if (fileSizeMB > 16 || !allowedExtensions.exec(file.name)) {
+            if (errorJs) errorJs.innerText = "File non valido o troppo grande.";
+            input.value = "";
+            if (fileNameDisplay) fileNameDisplay.innerText = "Nessun file selezionato";
+            if (removeBtn) removeBtn.classList.add('hidden');
+        } else {
+            if (fileNameDisplay) fileNameDisplay.innerText = file.name;
+            if (removeBtn) {
+                console.log("Mostro la X ora...");
+                removeBtn.classList.remove('hidden');
+            }
         }
+    } else {
+        if (removeBtn) removeBtn.classList.add('hidden');
     }
-    form.submit(); // Questo DEVE far partire la richiesta al controller
 }
 
-// Keep the rest of your file name display logic below...
+function removeAttachment() {
+    console.log("Tentativo di rimozione allegato...");
+
+    const input = document.getElementById('file-hidden');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const removeBtn = document.getElementById('remove-file-btn');
+    const errorJs = document.getElementById('file-error-js');
+
+    if (input) {
+        input.value = "";
+    }
+
+    if (fileNameDisplay) {
+        fileNameDisplay.innerText = "Nessun file selezionato";
+    }
+
+    if (removeBtn) {
+        removeBtn.classList.add('hidden');
+    }
+
+    if (errorJs) {
+        errorJs.innerText = "";
+    }
+
+    console.log("Allegato rimosso con successo.");
+}

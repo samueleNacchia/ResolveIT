@@ -19,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
@@ -63,16 +64,29 @@ public class TicketController {
 
     @PreAuthorize("hasAuthority('CLIENTE')")
     @PostMapping("/salva")
-    public String salvaTicket(@Valid @ModelAttribute("ticketDTO") TicketDTO ticketDTO,
+    public String saveTicket(@Valid @ModelAttribute("ticketDTO") TicketDTO ticketDTO,
                               BindingResult result,
                               Principal principal,
                               Model model, RedirectAttributes redirectAttributes) throws IOException {
+
+        MultipartFile file = ticketDTO.getFileAllegato();
+        if (file != null && !file.isEmpty()) {
+            String fileName = file.getOriginalFilename();
+            if (fileName != null && !fileName.toLowerCase().matches(".*\\.(txt|jpg|jpeg|zip)$")) {
+                result.rejectValue("fileAllegato", "error.file", "Formato non consentito (solo .txt, .jpg, .jpeg, .zip)");
+            }
+            if (file.getSize() > 16777216) {
+                result.rejectValue("fileAllegato", "error.file", "Il file supera il limite di 16MB");
+            }
+        }
 
         if (result.hasErrors()) {
             Cliente cliente = clienteRepository.findByEmail(principal.getName());
             model.addAttribute("lista", ticketService.getTicketUtente(cliente));
             model.addAttribute("categorie", categoriaRepository.findAll());
             model.addAttribute("ordineSelezionato", "desc");
+
+            model.addAttribute("openTab", "new-ticket");
             return "user-homepage";
         }
 
@@ -83,7 +97,7 @@ public class TicketController {
             redirectAttributes.addFlashAttribute("successMessage", "Ticket creato con successo!");
             return "redirect:/ticket/home";
         } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Errore: formato o dimensione file non validi.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Errore: creazione ticket fallita");
             return "redirect:/ticket/home";
         }
     }
@@ -102,7 +116,7 @@ public class TicketController {
 
     @PreAuthorize("hasAuthority('CLIENTE')")
     @PostMapping("/elimina/{id}")
-    public String eliminaTicket(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String deleteTicket(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         boolean success = ticketService.deleteTicket(id);
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Ticket eliminato con successo!");
@@ -115,7 +129,7 @@ public class TicketController {
 
     @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/prendi/{id}")
-    public String prendiInCarico(@PathVariable("id") Long id, Principal principal, RedirectAttributes redirectAttributes) {
+    public String assign(@PathVariable("id") Long id, Principal principal, RedirectAttributes redirectAttributes) {
 
         if (principal == null) {
             return "redirect:/login";
@@ -140,7 +154,7 @@ public class TicketController {
 
     @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/risolvi/{id}")
-    public String risolvi(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String resolve(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         boolean success = ticketService.resolveTicket(id);
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Ticket risolto con successo!");
@@ -153,7 +167,7 @@ public class TicketController {
 
     @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/rilascia/{id}")
-    public String rilascia(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String release(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         boolean success = ticketService.releaseTicket(id);
         if (success) {
             redirectAttributes.addFlashAttribute("successMessage", "Ticket rilasciato con successo!");

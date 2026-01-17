@@ -1,6 +1,9 @@
 package it.unisa.resolveIt.ticket.dto;
 
 import it.unisa.resolveIt.model.enums.Stato;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 
@@ -8,10 +11,21 @@ import java.time.LocalDateTime;
 public class TicketDTO {
 
     private Long id;
+
+    @NotBlank(message = "Il titolo è obbligatorio")
+    @Pattern(regexp = "^[a-zA-Z0-9À-ÿ '‘\".,!?-]{5,100}$", message = "Il titolo deve essere tra 5 e 100 caratteri validi")
     private String titolo;
+
+    @NotBlank(message = "La descrizione è obbligatoria")
+    @Size(max = 2000, message = "La descrizione deve avere massimo 2000 caratteri")
     private String descrizione;
+
+
     private Long idCategoria;
+
     private MultipartFile fileAllegato;
+
+
     private String nomeFile;
     private Stato stato;
     private LocalDateTime dataCreazione;
