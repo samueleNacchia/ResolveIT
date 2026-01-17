@@ -44,21 +44,21 @@ public class TicketImpl implements TicketService{
     }
 
     @Transactional
-    public boolean addTicket(TicketDTO dto, Cliente autore) throws IOException {
+    public void addTicket(TicketDTO dto, Cliente autore) throws IOException {
         Ticket ticket = new Ticket();
         ticket.setTitolo(dto.getTitolo());
         ticket.setDescrizione(dto.getDescrizione());
 
         Categoria cat = categoriaRepository.findById(dto.getIdCategoria()).orElse(null);
         if (cat == null || cat.getStato() == false) {
-            return false;
+            throw new RuntimeException("Categoria non valida");
         }
         ticket.setCategoria(cat);
 
         if (dto.getFileAllegato() != null && !dto.getFileAllegato().isEmpty()) {
 
             if (dto.getFileAllegato().getSize() > 16 * 1024 * 1024) {
-                return false;
+                throw new RuntimeException("Allegato troppo grande");
             }
 
             String originalName = dto.getFileAllegato().getOriginalFilename();
@@ -71,17 +71,17 @@ public class TicketImpl implements TicketService{
                     ticket.setAllegato(dto.getFileAllegato().getBytes());
                     ticket.setNomeFile(originalName);
                 } else {
-                    return false;
+                    throw new RuntimeException("Formato allegato non valido");
                 }
             }
         }
 
         if (dto.getTitolo() == null || !dto.getTitolo().matches(titolo_regex)) {
-            return false;
+            throw new RuntimeException("Formato titolo non valido");
         }
 
         if(dto.getDescrizione().length() > 2000){
-            return false;
+            throw new RuntimeException("Lunghezza descrizione non valida");
         }
 
         ticket.setCliente(autore);
@@ -95,80 +95,74 @@ public class TicketImpl implements TicketService{
 
         try {
             ticketRepository.save(ticket);
-            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
         }
     }
 
 
 
-    public boolean deleteTicket(Long ticketId) {
+    public void deleteTicket(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId).orElse(null);
-        if(ticket == null) return false;
+        if(ticket == null) throw new RuntimeException("Ticket non trovato");
 
         if (!ticket.getStato().equals(Stato.APERTO)) {
-            return false;
+            throw new RuntimeException("Ticket in stato non valido");
         }
 
         ticket.setDataAnnullamento(LocalDateTime.now());
         ticket.setStato(Stato.ANNULLATO);
         ticketRepository.save(ticket);
-        return true;
     }
 
 
 
-    public boolean assignTicket(Long ticketId, Operatore operatore) {
+    public void assignTicket(Long ticketId, Operatore operatore) {
         Ticket ticket = ticketRepository.findById(ticketId).orElse(null);
-        if(ticket == null) return false;
+        if(ticket == null) throw new RuntimeException("Ticket non trovato");
 
         if (!ticket.getStato().equals(Stato.APERTO)) {
-            return false;
+            throw new RuntimeException("Ticket in stato non valido");
         }
 
         if (operatore == null) {
-            return false;
+            throw new RuntimeException("Operatore non valido");
         }
 
         ticket.setOperatore(operatore);
         ticket.setDataInCarico(LocalDateTime.now());
         ticket.setStato(Stato.IN_CORSO);
         ticketRepository.save(ticket);
-        return true;
     }
 
 
 
-    public boolean resolveTicket(Long ticketId) {
+    public void resolveTicket(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId).orElse(null);
-        if(ticket == null) return false;
+        if(ticket == null) throw new RuntimeException("Ticket non trovato");
 
         if (!ticket.getStato().equals(Stato.IN_CORSO)) {
-            return false;
+            throw new RuntimeException("Ticket in stato non valido");
         }
 
         ticket.setDataResolved(LocalDateTime.now());
         ticket.setStato(Stato.RISOLTO);
         ticketRepository.save(ticket);
-        return true;
     }
 
 
-    public boolean releaseTicket(Long ticketId) {
+    public void releaseTicket(Long ticketId) {
         Ticket ticket = ticketRepository.findById(ticketId).orElse(null);
-        if(ticket == null) return false;
+        if(ticket == null) throw new RuntimeException("Ticket non trovato");
 
         if (!ticket.getStato().equals(Stato.IN_CORSO)) {
-            return false;
+            throw new RuntimeException("Ticket in stato non valido");
         }
 
         ticket.setOperatore(null);
         ticket.setStato(Stato.APERTO);
 
         ticketRepository.save(ticket);
-        return true;
     }
 
     public Ticket getTicketById(Long id) {

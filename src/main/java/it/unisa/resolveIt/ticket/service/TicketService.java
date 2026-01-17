@@ -23,7 +23,7 @@ public interface TicketService {
      * non esiste o l'allegato ha un formato non valido.
      * Post-condizione: se {@code true}, il ticket è persistito nel database.
      */
-    boolean addTicket(TicketDTO dto, Cliente autore) throws IOException;
+    void addTicket(TicketDTO dto, Cliente autore) throws IOException;
 
 
     /**
@@ -41,7 +41,7 @@ public interface TicketService {
      * dalla coda dei ticket attivi o annullato logicamente.
      * @see it.unisa.resolveIt.model.entity.Ticket
      */
-    boolean deleteTicket(Long ticketId);
+    void deleteTicket(Long ticketId);
 
 
 
@@ -60,7 +60,7 @@ public interface TicketService {
      * Post-condizione: se {@code true}, il ticket è associato all'operatore e lo stato
      * è impostato su "IN_CORSO" (assegnato).
      */
-    boolean assignTicket(Long ticketId, Operatore operatore);
+    void assignTicket(Long ticketId, Operatore operatore);
 
 
 
@@ -78,7 +78,7 @@ public interface TicketService {
      * @throws java.util.NoSuchElementException se l'ID fornito non corrisponde a nessun ticket.
      * Post-condizione: se {@code true}, lo stato del ticket nel sistema è "RISOLTO".
      */
-    boolean resolveTicket(Long ticketId);
+    void resolveTicket(Long ticketId);
 
 
 
@@ -94,7 +94,7 @@ public interface TicketService {
      * @throws java.util.NoSuchElementException se l'ID fornito non corrisponde a nessun ticket esistente.
      * Post-condizione: se {@code true}, l'operatore assegnato è nullo e lo stato è "APERTO".
      */
-    boolean releaseTicket(Long ticketId);
+    void releaseTicket(Long ticketId);
 
 
     Ticket getTicketById(Long id);

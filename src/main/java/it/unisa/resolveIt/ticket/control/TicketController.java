@@ -91,15 +91,16 @@ public class TicketController {
         }
 
         Cliente cliente = clienteRepository.findByEmail(principal.getName());
-        boolean success = ticketService.addTicket(ticketDTO, cliente);
 
-        if (success) {
+        try{
+            ticketService.addTicket(ticketDTO, cliente);
             redirectAttributes.addFlashAttribute("successMessage", "Ticket creato con successo!");
             return "redirect:/ticket/home";
-        } else {
+        } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Errore: creazione ticket fallita");
             return "redirect:/ticket/home";
         }
+
     }
 
     @PreAuthorize("hasAuthority('OPERATORE')")
@@ -117,12 +118,12 @@ public class TicketController {
     @PreAuthorize("hasAuthority('CLIENTE')")
     @PostMapping("/elimina/{id}")
     public String deleteTicket(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        boolean success = ticketService.deleteTicket(id);
-        if (success) {
+        try{
+            ticketService.deleteTicket(id);
             redirectAttributes.addFlashAttribute("successMessage", "Ticket eliminato con successo!");
             return "redirect:/ticket/home";
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Operazione fallita");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Errore: eliminazione ticket fallita");
             return "redirect:/ticket/home";
         }
     }
@@ -137,44 +138,39 @@ public class TicketController {
 
         Operatore operatore = operatoreRepository.findByEmail(principal.getName());
 
-        try {
-            boolean success = ticketService.assignTicket(id, operatore);
-            if (success) {
-                redirectAttributes.addFlashAttribute("successMessage", "Ticket assegnato correttamente!");
-            } else {
-                redirectAttributes.addFlashAttribute("errorMessage", "Impossibile assegnare il ticket (ID non trovato o già in carico)");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorMessage", "Errore interno: " + e.getMessage());
+        try{
+            ticketService.assignTicket(id, operatore);
+            redirectAttributes.addFlashAttribute("successMessage", "Ticket assegnato con successo!");
+            return "redirect:/ticket/home";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Errore: assegnazione ticket fallita");
+            return "redirect:/ticket/home";
         }
-
-        return "redirect:/ticket/operatore-home";
     }
 
     @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/risolvi/{id}")
     public String resolve(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        boolean success = ticketService.resolveTicket(id);
-        if (success) {
+        try{
+            ticketService.resolveTicket(id);
             redirectAttributes.addFlashAttribute("successMessage", "Ticket risolto con successo!");
-            return "redirect:/ticket/operatore-home";
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Operazione fallita");
-            return "redirect:/ticket/operatore-home";
+            return "redirect:/ticket/home";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Errore: risoluzione ticket fallita");
+            return "redirect:/ticket/home";
         }
     }
 
     @PreAuthorize("hasAuthority('OPERATORE')")
     @PostMapping("/rilascia/{id}")
     public String release(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        boolean success = ticketService.releaseTicket(id);
-        if (success) {
+        try{
+            ticketService.releaseTicket(id);
             redirectAttributes.addFlashAttribute("successMessage", "Ticket rilasciato con successo!");
-            return "redirect:/ticket/operatore-home";
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Operazione fallita");
-            return "redirect:/ticket/operatore-home";
+            return "redirect:/ticket/home";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Errore: rilascio ticket fallito");
+            return "redirect:/ticket/home";
         }
     }
 

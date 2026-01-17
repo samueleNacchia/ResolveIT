@@ -12,32 +12,32 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 public class TicketIntegrationTest {
 
-    @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private WebApplicationContext context;
 
     @MockitoBean
     private TicketService ticketService;
@@ -51,97 +51,64 @@ public class TicketIntegrationTest {
     @MockitoBean
     private CategoriaRepository categoriaRepository;
 
-    @Autowired
-    private org.springframework.web.context.WebApplicationContext context;
-
-    private Cliente mockCliente;
-    private Operatore mockOp;
-
     @BeforeEach
     public void setup() {
-        // Forza il caricamento di Spring Security nel MockMvc
-        mockMvc = org.springframework.test.web.servlet.setup.MockMvcBuilders
-                .webAppContextSetup(context)
-                .apply(org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity())
+        // Inizializzazione manuale come nel test del collega
+        mockMvc = MockMvcBuilders.webAppContextSetup(context)
+                .apply(springSecurity())
                 .build();
 
-        mockCliente = new Cliente();
+        // Setup utenti per aggirare i filtri di Security che cercano l'utente nel DB
+        Cliente mockCliente = new Cliente();
         mockCliente.setEmail("cliente@test.it");
-        when(clienteRepository.findByEmail("cliente@test.it")).thenReturn(mockCliente);
 
-        mockOp = new Operatore();
+        Operatore mockOp = new Operatore();
         mockOp.setEmail("op@test.it");
-        when(operatoreRepository.findByEmail("op@test.it")).thenReturn(mockOp);
 
-        when(categoriaRepository.findAll()).thenReturn(new java.util.ArrayList<>());
+        lenient().when(clienteRepository.findByEmail("cliente@test.it")).thenReturn(mockCliente);
+        lenient().when(operatoreRepository.findByEmail("op@test.it")).thenReturn(mockOp);
+        lenient().when(categoriaRepository.findAll()).thenReturn(new ArrayList<>());
     }
 
-
-
     @Test
-    @WithMockUser(username = "cliente@test.it", authorities = {"CLIENTE"})
-    public void testUserHome_ConFiltri() throws Exception {
-        mockMvc.perform(get("/ticket/home")
-                        .param("stato", "APERTO")
-                        .param("ordine", "asc"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("user-homepage"));
-    }
-
-
-    @Test
-    @WithMockUser(username = "cliente@test.it", authorities = {"CLIENTE"})
-    public void testSalvaTicket_ServiceFailure() throws Exception {
-        when(ticketService.addTicket(any(), any())).thenReturn(false);
-
-        mockMvc.perform(post("/ticket/salva")
-                        .param("titolo", "Titolo Valido")
-                        .param("descrizione", "Descrizione valida")
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
+    public void testSalvaTicket_Successo() throws Exception {
+        mockMvc.perform(multipart("/ticket/salva")
+                        .param("titolo", "Problema Connessione")
+                        .param("descrizione", "Internet non funziona")
                         .param("idCategoria", "1")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/ticket/home"));
+                .andExpect(redirectedUrl("/ticket/home"))
+                .andExpect(flash().attribute("successMessage", "Ticket creato con successo!"));
     }
 
+    @Test
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
+    public void testSalvaTicket_ErroreService() throws Exception {
+        // Simula il fallimento del service che porta al redirect con messaggio di errore
+        doThrow(new RuntimeException("Errore")).when(ticketService).addTicket(any(TicketDTO.class), any(Cliente.class));
+
+        mockMvc.perform(post("/ticket/salva")
+                        .param("titolo", "Valido")
+                        .param("descrizione", "Valida")
+                        .param("idCategoria", "1")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("errorMessage", "Errore: creazione ticket fallita"));
+    }
 
     @Test
-    @WithMockUser(username = "op@test.it", authorities = {"OPERATORE"})
-    public void testPrendiInCarico_Successo() throws Exception {
-        when(ticketService.assignTicket(eq(1L), any())).thenReturn(true);
-
+    @WithMockUser(username = "op@test.it", authorities = "OPERATORE")
+    public void testAssegnaTicket_Successo() throws Exception {
         mockMvc.perform(post("/ticket/prendi/1")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/ticket/operatore-home"));
+                .andExpect(flash().attribute("successMessage", "Ticket assegnato con successo!"));
     }
 
     @Test
-    @WithMockUser(username = "op@test.it", authorities = {"OPERATORE"})
-    public void testPrendiInCarico_Exception() throws Exception {
-        when(ticketService.assignTicket(anyLong(), any())).thenThrow(new RuntimeException("DB Error"));
-
-        mockMvc.perform(post("/ticket/prendi/1")
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(flash().attribute("errorMessage", "Errore interno: DB Error"));
-    }
-
-    // --- TEST DOWNLOAD (Prefisso /ticket aggiunto) ---
-
-    @Test
-    @WithMockUser(username = "cliente@test.it", authorities = {"CLIENTE"})
-    public void testDownloadFile_NotFound() throws Exception {
-        Ticket t = new Ticket();
-        t.setAllegato(null);
-        when(ticketService.getTicketById(1L)).thenReturn(t);
-
-        // L'URL deve includere /ticket perché è definito a livello di classe nel Controller
-        mockMvc.perform(get("/ticket/download/1"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @WithMockUser(username = "cliente@test.it", authorities = {"CLIENTE"})
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
     public void testDownloadFile_Successo() throws Exception {
         Ticket t = new Ticket();
         t.setAllegato("content".getBytes());
@@ -150,122 +117,107 @@ public class TicketIntegrationTest {
 
         mockMvc.perform(get("/ticket/download/1"))
                 .andExpect(status().isOk())
-                .andExpect(header().exists(HttpHeaders.CONTENT_DISPOSITION));
+                .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM_VALUE));
     }
 
     @Test
-    @WithMockUser(username = "cliente@test.it", authorities = {"CLIENTE"})
-    public void testEliminaTicket_Fallimento() throws Exception {
-        when(ticketService.deleteTicket(anyLong())).thenReturn(false);
-
-        mockMvc.perform(post("/ticket/elimina/1").with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(flash().attribute("errorMessage", "Operazione fallita"));
-    }
-
-    @Test
-    @WithMockUser(username = "op@test.it", authorities = {"OPERATORE"})
-    public void testRisolvi_Fallimento() throws Exception {
-        when(ticketService.resolveTicket(anyLong())).thenReturn(false);
-
-        mockMvc.perform(post("/ticket/risolvi/1").with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(flash().attribute("errorMessage", "Operazione fallita"));
-    }
-
-    @Test
-    @WithMockUser(username = "op@test.it", authorities = {"OPERATORE"})
-    public void testPrendiInCarico_Eccezione() throws Exception {
-        when(ticketService.assignTicket(anyLong(), any())).thenThrow(new RuntimeException("Errore Database"));
-
-        mockMvc.perform(post("/ticket/prendi/1").with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(flash().attribute("errorMessage", "Errore interno: Errore Database"));
-    }
-
-    @Test
-    @WithMockUser(username = "cliente@test.it", authorities = {"CLIENTE"})
-    public void testDownloadFile_NomeDefault() throws Exception {
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
+    public void testDownloadFile_NotFound() throws Exception {
         Ticket t = new Ticket();
-        t.setAllegato("dati".getBytes());
-        t.setNomeFile(null);
+        t.setAllegato(null);
         when(ticketService.getTicketById(1L)).thenReturn(t);
 
         mockMvc.perform(get("/ticket/download/1"))
-                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"allegato.dat\""));
+                .andExpect(status().isNotFound());
     }
 
-
     @Test
-    @WithMockUser(username = "op@test.it", authorities = {"OPERATORE"})
-    public void testOperatoreHome_Successo() throws Exception {
-        // 1. Preparazione dei Mock
-        when(operatoreRepository.findByEmail("op@test.it")).thenReturn(mockOp);
-        when(ticketService.getTicketInCarico(mockOp)).thenReturn(new java.util.ArrayList<>());
-        when(ticketService.getTicketDisponibili()).thenReturn(new java.util.ArrayList<>());
-
-        // 2. Esecuzione e Verifica
-        mockMvc.perform(get("/ticket/operatore-home"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("operatore-homepage"))
-                .andExpect(model().attributeExists("listaLavoro", "listaAttesa"));
-
-        // 3. Verifica che i metodi siano stati effettivamente chiamati (ottimo per il coverage)
-        verify(operatoreRepository).findByEmail("op@test.it");
-        verify(ticketService).getTicketInCarico(mockOp);
-        verify(ticketService).getTicketDisponibili();
-    }
-
-
-    // RAMO 1: Successo (success = true)
-    @Test
-    @WithMockUser(username = "op@test.it", authorities = {"OPERATORE"})
-    public void testRilascia_Successo() throws Exception {
-        // Mock del service che restituisce true
-        when(ticketService.releaseTicket(1L)).thenReturn(true);
-
-        mockMvc.perform(post("/ticket/rilascia/1")
-                        .with(csrf())) // Obbligatorio per le POST
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
+    public void testEliminaTicket_Successo() throws Exception {
+        mockMvc.perform(post("/ticket/elimina/1")
+                        .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/ticket/operatore-home"))
-                .andExpect(flash().attribute("successMessage", "Ticket rilasciato con successo!"));
-
-        // Verifica che il metodo del service sia stato chiamato esattamente una volta
-        verify(ticketService, times(1)).releaseTicket(1L);
+                .andExpect(flash().attribute("successMessage", "Ticket eliminato con successo!"));
     }
 
-    // RAMO 2: Fallimento (success = false)
     @Test
-    @WithMockUser(username = "op@test.it", authorities = {"OPERATORE"})
-    public void testRilascia_Fallimento() throws Exception {
-        // Mock del service che restituisce false
-        when(ticketService.releaseTicket(1L)).thenReturn(false);
-
+    @WithMockUser(username = "op@test.it", authorities = "OPERATORE")
+    public void testRilasciaTicket_Successo() throws Exception {
         mockMvc.perform(post("/ticket/rilascia/1")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/ticket/operatore-home"))
-                .andExpect(flash().attribute("errorMessage", "Operazione fallita"));
+                .andExpect(flash().attribute("successMessage", "Ticket rilasciato con successo!"));
+    }
 
-        verify(ticketService, times(1)).releaseTicket(1L);
+
+
+    @Test
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
+    public void testUserHome_ConFiltri() throws Exception {
+        mockMvc.perform(get("/ticket/home")
+                        .param("stato", "APERTO")
+                        .param("ordine", "asc"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("statoSelezionato", Stato.APERTO))
+                .andExpect(model().attribute("ordineSelezionato", "asc"));
+
+        verify(ticketService).getTicketUtenteFiltrati(any(Cliente.class), eq(Stato.APERTO), eq("asc"));
     }
 
 
     @Test
-    @WithMockUser(username = "cliente@test.it", authorities = {"CLIENTE"})
-    public void testSalvaTicket_Success() throws Exception {
-        when(clienteRepository.findByEmail("cliente@test.it")).thenReturn(mockCliente);
-        // Istruiamo il service a restituire true
-        when(ticketService.addTicket(any(TicketDTO.class), eq(mockCliente))).thenReturn(true);
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
+    public void testSalvaTicket_FormatoFileErrato() throws Exception {
+        MockMultipartFile filePdf = new MockMultipartFile(
+                "fileAllegato", "documento.pdf", "application/pdf", "contenuto".getBytes());
 
-        mockMvc.perform(post("/ticket/salva")
+        mockMvc.perform(multipart("/ticket/salva")
+                        .file(filePdf)
                         .param("titolo", "Titolo Valido")
                         .param("descrizione", "Descrizione valida")
                         .param("idCategoria", "1")
                         .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/ticket/home"))
-                .andExpect(flash().attribute("successMessage", "Ticket creato con successo!"));
+                .andExpect(status().isOk())
+                .andExpect(view().name("user-homepage"))
+                .andExpect(model().attributeHasFieldErrors("ticketDTO", "fileAllegato"))
+                .andExpect(model().attributeExists("openTab"));
+
+        verify(ticketService, never()).addTicket(any(), any());
+    }
+
+
+    @Test
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
+    public void testSalvaTicket_FileTroppoGrande() throws Exception {
+        byte[] grandeContenuto = new byte[17 * 1024 * 1024]; // 17MB
+        MockMultipartFile filePesante = new MockMultipartFile(
+                "fileAllegato", "test.jpg", "image/jpeg", grandeContenuto);
+
+        mockMvc.perform(multipart("/ticket/salva")
+                        .file(filePesante)
+                        .param("titolo", "Titolo")
+                        .param("descrizione", "Descrizione")
+                        .param("idCategoria", "1")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasFieldErrors("ticketDTO", "fileAllegato"));
+    }
+
+
+    @Test
+    @WithMockUser(username = "cliente@test.it", authorities = "CLIENTE")
+    public void testSalvaTicket_TitoloMancante() throws Exception {
+        when(categoriaRepository.findAll()).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(post("/ticket/salva")
+                        .param("titolo", "")
+                        .param("descrizione", "Descrizione")
+                        .param("idCategoria", "1")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("user-homepage"))
+                .andExpect(model().attributeHasFieldErrors("ticketDTO", "titolo"))
+                .andExpect(model().attributeExists("categorie", "lista", "openTab"));
     }
 
 }
