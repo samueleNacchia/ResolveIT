@@ -50,6 +50,9 @@ public class CategoriaImpl implements  CategoriaService{
 
     @Transactional
     public void addCategoria(Categoria categoria) {
+        if (categoria == null) {
+            throw new IllegalArgumentException("Dati categoria non validi");
+        }
         if (categoriaRepository.existsById(categoria.getID_C()) || (categoriaRepository.findByNome(categoria.getNome()) != null))
             throw new RuntimeException("Categoria già presente nel database");
         else

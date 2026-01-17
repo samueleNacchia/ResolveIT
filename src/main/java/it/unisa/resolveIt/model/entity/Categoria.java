@@ -1,10 +1,7 @@
 package it.unisa.resolveIt.model.entity;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -14,11 +11,11 @@ import java.util.Objects;
 @Entity
 public class Categoria {
     @Id @GeneratedValue (strategy = GenerationType.IDENTITY)
-    long ID_C;
+    private long ID_C;
     @NotBlank @Pattern(regexp = "^[A-ZÀ-ÿa-z\\s]{3,50}$")
-    String nome;
-    @NotNull
-    boolean stato;
+    private String nome;
+    @Column(nullable= false)
+    private boolean stato;
 
     public Categoria() {
     }
