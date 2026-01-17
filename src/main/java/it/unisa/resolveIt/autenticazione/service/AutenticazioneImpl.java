@@ -14,7 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AutenticazioneImpl implements UserDetailsService {
+public class AutenticazioneImpl implements AutenticazioneService {
 
     @Autowired
     private ClienteRepository clienteRepository;
@@ -47,7 +47,6 @@ public class AutenticazioneImpl implements UserDetailsService {
      */
 
     @Override
-    @PreAuthorize("isAnonymous()")
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
         // Cerca gestore
