@@ -407,6 +407,20 @@ class TicketServiceTest {
     }
 
     @Test
+    void releaseTicket_TicketInesistente_Fallimento() {
+        Long ticketId = 1L;
+
+        when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            ticketService.releaseTicket(ticketId);
+        });
+
+        assertEquals("Ticket non trovato", exception.getMessage());
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
     void resolveTicket_Fallimento_StatoNonAssegnato() {
         Long ticketId = 1L;
         Ticket ticket = new Ticket();

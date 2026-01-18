@@ -2,6 +2,8 @@ package it.unisa.resolveIt.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -16,6 +18,7 @@ import java.util.Set;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -27,12 +30,24 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login-form", "/error").permitAll()
-                        .requestMatchers("/register").anonymous()
-                        .requestMatchers("/gestore", "/registerOperator").hasAuthority("GESTORE")
-                        .requestMatchers("/ticket/home", "/ticket/salva", "/ticket/elimina/**").hasAuthority("CLIENTE")
+                        // pagine pubbliche
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/login-form", "/register").anonymous()
+
+                        // GET /gestore e POST di gestione account/categorie: solo GESTORE
+                        .requestMatchers(HttpMethod.GET, "/gestore").hasAuthority("GESTORE")
+                        .requestMatchers(HttpMethod.POST,
+                                "/registerOperator",
+                                "/account/removeCliente",
+                                "/account/removeOperatore",
+                                "/categoria/disableCategoria",
+                                "/categoria/enableCategoria",
+                                "/categoria/addCategoria",
+                                "/categoria/updateCategoria"
+                        ).hasAuthority("GESTORE")
+                        .requestMatchers("/ticket/home", "/ticket/salva/**", "/ticket/elimina/**").hasAuthority("CLIENTE")
                         .requestMatchers("/ticket/operatore-home", "/ticket/prendi/**", "/ticket/risolvi/**", "/ticket/rilascia/**").hasAuthority("OPERATORE")
-                        .anyRequest().authenticated()
+                        .requestMatchers("/my-profile", "/ticket/download/**").hasAnyAuthority("CLIENTE", "OPERATORE")
                 )
                 .formLogin(form -> form
                         .loginPage("/login-form")
@@ -55,7 +70,7 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout=true")
+                        .logoutSuccessUrl("/login-form??logout=true")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()

@@ -6,6 +6,7 @@ import it.unisa.resolveIt.model.repository.OperatoreRepository;
 import it.unisa.resolveIt.registrazione.dto.RegistraUtenteDTO;
 import it.unisa.resolveIt.registrazione.service.RegistrazioneService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,7 @@ public class GestoreController {
     @Autowired
     private RegistrazioneService registrazioneService;
 
+    @PreAuthorize("hasAuthority('GESTORE')")
     @GetMapping("/gestore")
     public String visualizzaDashboardGestore(@AuthenticationPrincipal UserDetails userDetails, Model model) {
 
@@ -47,6 +49,7 @@ public class GestoreController {
         return "gestore";
     }
 
+    @PreAuthorize("hasAuthority('GESTORE')")
     @PostMapping("/registerOperator")
     public String registerOperatorController(@ModelAttribute("utenteDTO") RegistraUtenteDTO dto, BindingResult result, RedirectAttributes redirectAttributes) {
 

@@ -20,8 +20,8 @@
         <div class="auth-card">
             <h2>Accedi</h2>
 
-            <div th:if="${param.error}" class="alert alert-error">Email o password non valide.</div>
-            <div th:if="${param.logout}" class="alert alert-success">Sei uscito correttamente.</div>
+            <div th:if="${param.error}" class="alert alert-error">Autenticazione fallita</div>
+            <div th:if="${param.logout}" class="alert alert-success">Sei uscito correttamente</div>
             <div th:if="${passwordSuccess}" class="alert alert-success" th:text="${passwordSuccess}"></div>
 
             <form th:action="@{/login}" method="post" novalidate>

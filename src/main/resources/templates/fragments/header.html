@@ -4,10 +4,15 @@
         class="main-header">
 
     <div class="header-container" sec:authorize="hasAnyAuthority('CLIENTE','OPERATORE','GESTORE')">
-        <a th:href="@{/dashboard}" sec:authorize="hasAnyAuthority('CLIENTE','OPERATORE')">
+        <a th:href="@{/gestore}" sec:authorize="hasAuthority('GESTORE')">
             <img th:src="@{/images/logo.png}" alt="Logo" class="logo-header">
         </a>
-        <a th:href="@{/gestore}" sec:authorize="hasAnyAuthority('GESTORE')">
+
+        <a th:href="@{/ticket/operatore-home}" sec:authorize="hasAuthority('OPERATORE')">
+            <img th:src="@{/images/logo.png}" alt="Logo" class="logo-header">
+        </a>
+
+        <a th:href="@{/ticket/home}" sec:authorize="hasAuthority('CLIENTE')">
             <img th:src="@{/images/logo.png}" alt="Logo" class="logo-header">
         </a>
 

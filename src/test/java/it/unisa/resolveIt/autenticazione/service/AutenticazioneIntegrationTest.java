@@ -106,6 +106,30 @@ public class AutenticazioneIntegrationTest {
     }
 
     /**
+     * Testa il fallimento dell'autenticazione (AD1) per un utente disabilitato.
+     * Verifica che il sistema reindirizzi l'utente alla pagina di login con errore.
+     */
+    @Test
+    @WithAnonymousUser
+    public void utenteDisabilitato() throws Exception {
+        String email = "cliente@test.com";
+        String passInChiaro = "cliente123";
+
+        Cliente clienteEsistente = new Cliente();
+        clienteEsistente.setEmail(email);
+        clienteEsistente.setPassword(new BCryptPasswordEncoder().encode(passInChiaro));
+        clienteEsistente.disable();
+
+        when(clienteRepository.findByEmail(email)).thenReturn(clienteEsistente);
+
+        mockMvc.perform(post("/login")
+                        .param("username", email)
+                        .param("password", passInChiaro)
+                        .with(csrf()))
+                .andExpect(redirectedUrl("/login-form?error=true"));
+    }
+
+    /**
      * Testa il successo dell'autenticazione (MP2) per un Cliente.
      * Verifica che il sistema riconosca le credenziali valide e reindirizzi l'utente
      * alla propria home page.

@@ -46,6 +46,19 @@ public class DatabasePopulator implements CommandLineRunner {
             System.out.println("Cliente già registrato. Salto il caricamento.");
         }
 
+        if(!isRegistered("clienteoff@test.com")){
+            Cliente cliente = new Cliente();
+            cliente.setNome("Samuele");
+            cliente.setCognome("Nacchia");
+            cliente.setEmail("clienteoff@test.com");
+            cliente.setPassword(passwordEncoder.encode("cliente123"));
+            cliente.disable();
+            clienteRepository.save(cliente);
+            System.out.println("Cliente disabilitato registrato!");
+        } else {
+            System.out.println("Cliente disabilitato già registrato. Salto il caricamento.");
+        }
+
         if(!isRegistered("operatore@test.com")){
             Operatore operatore = new Operatore();
             operatore.setNome("Andrea");
