@@ -55,7 +55,7 @@ public class TicketController {
         model.addAttribute("ticketDTO", new TicketDTO());
         model.addAttribute("categorie", categoriaRepository.findAllByStato(true));
 
-        // AGGIUNTO PER L'HTML
+
         model.addAttribute("statoSelezionato", stato);
         model.addAttribute("ordineSelezionato", ordine);
 

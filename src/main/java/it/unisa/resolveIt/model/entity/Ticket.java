@@ -42,7 +42,7 @@ public class Ticket {
     private LocalDateTime dataResolved;
 
     @Lob
-    @Column(columnDefinition = "LONGBLOB")
+    @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] allegato;
 
     @Column(name = "nome_file")
