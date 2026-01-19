@@ -20,7 +20,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -218,4 +221,52 @@ public class TicketIntegrationTest {
                 .andExpect(model().attributeExists("categorie", "lista", "openTab"));
     }
 
+
+    @Test
+    @WithMockUser(username = "op@test.it", authorities = "OPERATORE")
+    public void testOperatoreHome_Successo() throws Exception {
+        // Preparazione dati
+        Operatore op = new Operatore();
+        op.setEmail("op@test.it");
+        when(operatoreRepository.findByEmail("op@test.it")).thenReturn(op);
+
+        when(ticketService.getTicketInCarico(any())).thenReturn(new ArrayList<>());
+        when(ticketService.getTicketDisponibili()).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(get("/ticket/operatore-home"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("operatore-homepage"))
+                .andExpect(model().attributeExists("listaLavoro", "listaAttesa"));
+    }
+
+    @Test
+    @WithMockUser(username = "op@test.it", authorities = "OPERATORE")
+    public void testOperatoreHome_VerificaOrdinamento() throws Exception {
+        Operatore op = new Operatore();
+        when(operatoreRepository.findByEmail(anyString())).thenReturn(op);
+
+        // Creiamo un ticket RISOLTO (che dovrebbe andare in fondo)
+        TicketDTO tRisolto = new TicketDTO();
+        tRisolto.setStato(Stato.RISOLTO);
+        tRisolto.setTitolo("Ticket Vecchio");
+        tRisolto.setDataCreazione(LocalDateTime.now().minusDays(1));
+
+        // Creiamo un ticket IN_CORSO (che deve andare in cima)
+        TicketDTO tInCorso = new TicketDTO();
+        tInCorso.setStato(Stato.IN_CORSO);
+        tInCorso.setTitolo("Ticket Attivo");
+        tInCorso.setDataCreazione(LocalDateTime.now());
+
+        List<TicketDTO> mockList = Arrays.asList(tRisolto, tInCorso);
+        when(ticketService.getTicketInCarico(any())).thenReturn(mockList);
+
+        mockMvc.perform(get("/ticket/operatore-home"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("listaLavoro", matchesListOrder(tInCorso, tRisolto)));
+    }
+
+    // Helper method per verificare l'ordine nella lista del modello
+    private static org.hamcrest.Matcher<Iterable<? extends TicketDTO>> matchesListOrder(TicketDTO primo, TicketDTO secondo) {
+        return org.hamcrest.Matchers.contains(primo, secondo);
+    }
 }

@@ -25,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/ticket")
@@ -108,7 +109,17 @@ public class TicketController {
     public String operatoreHome(Model model, Principal principal) {
         Operatore operatore = operatoreRepository.findByEmail(principal.getName());
 
-        model.addAttribute("listaLavoro", ticketService.getTicketInCarico(operatore));
+        List<TicketDTO> ticketsInCarico = ticketService.getTicketInCarico(operatore);
+
+        List<TicketDTO> listaOrdinata = ticketsInCarico.stream()
+                .sorted((t1, t2) -> {
+                    if (t1.getStato().name().equals("IN_CORSO") && !t2.getStato().name().equals("IN_CORSO")) return -1;
+                    if (!t1.getStato().name().equals("IN_CORSO") && t2.getStato().name().equals("IN_CORSO")) return 1;
+                    return t2.getDataCreazione().compareTo(t1.getDataCreazione());
+                })
+                .collect(Collectors.toList());
+
+        model.addAttribute("listaLavoro", listaOrdinata);
         model.addAttribute("listaAttesa", ticketService.getTicketDisponibili());
 
         return "operatore-homepage";
