@@ -29,12 +29,14 @@ public class TicketDTO {
     private String nomeFile;
     private Stato stato;
     private LocalDateTime dataCreazione;
+    private LocalDateTime dataAnnullamento;
+    private LocalDateTime dataRisoluzione;
     private String nomeCategoria;
 
     public TicketDTO() {
     }
 
-    public TicketDTO(Long id, String titolo, String descrizione, Long idCategoria, MultipartFile fileAllegato, String nomeFile, Stato stato, LocalDateTime dataCreazione, String nomeCategoria) {
+    public TicketDTO(Long id, String titolo, String descrizione, Long idCategoria, MultipartFile fileAllegato, String nomeFile, Stato stato, LocalDateTime dataCreazione, LocalDateTime dataAnnullamento, LocalDateTime dataRisoluzione, String nomeCategoria) {
         this.id = id;
         this.titolo = titolo;
         this.descrizione = descrizione;
@@ -43,6 +45,8 @@ public class TicketDTO {
         this.nomeFile = nomeFile;
         this.stato = stato;
         this.dataCreazione = dataCreazione;
+        this.dataAnnullamento = dataAnnullamento;
+        this.dataRisoluzione = dataRisoluzione;
         this.nomeCategoria = nomeCategoria;
     }
 
@@ -116,5 +120,21 @@ public class TicketDTO {
 
     public void setNomeFile(String nomeFile) {
         this.nomeFile = nomeFile;
+    }
+
+    public LocalDateTime getDataAnnullamento() {
+        return dataAnnullamento;
+    }
+
+    public void setDataAnnullamento(LocalDateTime dataAnnullamento) {
+        this.dataAnnullamento = dataAnnullamento;
+    }
+
+    public LocalDateTime getDataRisoluzione() {
+        return dataRisoluzione;
+    }
+
+    public void setDataRisoluzione(LocalDateTime dataRisoluzione) {
+        this.dataRisoluzione = dataRisoluzione;
     }
 }

@@ -36,7 +36,10 @@ public class TicketImpl implements TicketService{
         dto.setDescrizione(t.getDescrizione());
         dto.setStato(t.getStato());
         dto.setDataCreazione(t.getDataCreazione());
+        dto.setDataRisoluzione(t.getDataResolved());
+        dto.setDataAnnullamento(t.getDataAnnullamento());
         dto.setNomeFile(t.getNomeFile());
+
         if (t.getCategoria() != null) {
             dto.setNomeCategoria(t.getCategoria().getNome());
         }

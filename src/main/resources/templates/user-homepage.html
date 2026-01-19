@@ -158,9 +158,24 @@
                     th:classappend="${
                       t.stato.name() == 'APERTO' ? 'bg-green-100 text-green-700' :
                       (t.stato.name() == 'IN_CORSO' ? 'bg-blue-100 text-blue-700' :
-                      (t.stato.name() == 'RISOLTO' ? 'bg-gray-100 text-gray-600' :
+                      (t.stato.name() == 'RISOLTO' ? 'bg-yellow-100 text-black-600' :
                       'bg-red-100 text-red-700'))}">
               </span>
+
+
+                <div th:if="${t.stato.name() == 'ANNULLATO' and t.dataAnnullamento != null}"
+                     class="text-[10px] text-red-400 mt-1">
+                  <i class="fa-solid fa-calendar-xmark mr-1"></i>
+                  <span th:text="${#temporals.format(t.dataAnnullamento, 'dd/MM/yyyy HH:mm')}">Data Annullamento</span>
+                </div>
+
+                <div th:if="${t.stato.name() == 'RISOLTO' and t.dataRisoluzione != null}"
+                     class="text-[10px] text-black-400 mt-1">
+                  <i class="fa-solid fa-calendar-xmark mr-1"></i>
+                  <span th:text="${#temporals.format(t.dataRisoluzione, 'dd/MM/yyyy HH:mm')}">Data Risoluzione</span>
+                </div>
+
+
               </td>
               <td class="px-6 py-4">
                 <button th:if="${t.nomeFile != null}"
